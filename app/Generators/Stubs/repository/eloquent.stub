@@ -1,0 +1,34 @@
+<?php
+
+$NAMESPACE$
+
+use Prettus\Repository\Eloquent\BaseRepository;
+use App\Api\Repositories\Contracts\UserRepository;
+use $REPOSITORY$
+use $MODEL$;
+$USE_VALIDATOR$
+
+/**
+ * Class $CLASS$RepositoryEloquent
+ */
+class $CLASS$RepositoryEloquent extends BaseRepository implements $CLASS$Repository
+{
+    /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    public function model()
+    {
+        return $CLASS$::class;
+    }
+
+    $VALIDATOR$
+
+    /**
+     * Boot up the repository, pushing criteria
+     */
+    public function boot()
+    {
+    }
+}

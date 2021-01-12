@@ -1,0 +1,125 @@
+allowances (amount):
+
+db.allowances.find({amount : {$exists : true}}).forEach( function(obj) { obj.amount = new NumberInt( obj.amount ); db.allowances.save(obj); } );
+
+
+
+branches(checkin_limit, checkout_limit):
+
+db.branches.find({checkin_limit : {$exists : true}}).forEach( function(obj) { obj.checkin_limit = new NumberInt( obj.checkin_limit ); db.branches.save(obj); } );
+
+db.branches.find({checkout_limit : {$exists : true}}).forEach( function(obj) { obj.checkout_limit = new NumberInt( obj.checkout_limit ); db.branches.save(obj); } );
+
+
+
+elements(index_num):
+
+db.elements.find({index_num : {$exists : true}}).forEach( function(obj) { obj.index_num = new NumberInt( obj.index_num ); db.elements.save(obj); } );
+
+
+
+payroll_configs(amount)
+
+db.payroll_configs.find({amount : {$exists : true}}).forEach( function(obj) { obj.amount = new NumberInt( obj.amount ); db.payroll_configs.save(obj); } );
+
+
+
+shifts(sort_index):
+
+db.shifts.find({sort_index : {$exists : true}}).forEach( function(obj) { obj.sort_index = new NumberInt( obj.sort_index ); db.shifts.save(obj); } );
+
+db.user_organizations.find({is_quit : {$exists : true}}).forEach( function(obj) { obj.quit_date = new ISODate( obj.quit_date ); db.user_organizations.save(obj); } );
+
+
+db.user_organizations.find({_id : {$exists : true}}).forEach( function(obj) { obj.group_id = obj.app_permission_id; db.user_organizations.save(obj); } );
+
+
+/***********Tạo index timekeeper***********/
+db.getCollection("time_keeper_error_logs").createIndex({ "code": 1, "error": 1, "machine_code": 1, "shop_id": 1 }, { "unique": true })
+db.getCollection("time_keeper_logs").createIndex({ "code": 1, "machine_code": 1, "shop_id": 1, "time": 1, "user_id": 1 }, { "unique": true })
+/***********End tạo index timekeeper***********/
+
+/***********Update lại log timekeeper***********/
+db.time_keeper_logs.find({shop_id:ObjectId('5bc136150b08887a9d311923'), is_check:1}).sort({time:1})
+db.time_keeper_logs.update(
+    {
+        shop_id:ObjectId('5bc136150b08887a9d311923')    
+    },
+    {
+        $unset:{
+            'employee_shift_id':'',
+            'employee_shift_ids':'',
+            'is_check':''
+        }
+    },
+    {
+        multi:true
+    }
+)
+/***********End Update lại log timekeeper***********/
+
+/***********Cập nhật log bên shift***********/
+db.empoloyee_shifts.find(
+    {
+        shop_id:ObjectId('5bc136150b08887a9d311923'),
+        checkin_log_id:{$exists:true}    
+    }
+)
+db.empoloyee_shifts.find(
+    {
+        shop_id:ObjectId('5bc136150b08887a9d311923'),
+        checkout_log_id:{$exists:true}
+    }
+)
+db.empoloyee_shifts.update(
+    {
+        shop_id:ObjectId('5bc136150b08887a9d311923'),
+        checkin_log_id:{$exists:true}
+    },
+    {
+        $unset: {
+            checkin_time:'',
+            checkin_log_id:''
+        }
+    },
+    {
+        multi:true
+    }
+)
+db.empoloyee_shifts.update(
+    {
+        shop_id:ObjectId('5bc136150b08887a9d311923'),
+        checkout_log_id:{$exists:true}  
+    },
+    {
+        $unset: {
+            checkout_time:'',
+            checkout_log_id:''
+        }
+    },
+    {
+        multi:true
+    }
+)
+/***********End Cập nhật log bên shift***********/
+
+
+
+db.empoloyee_shifts.find({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']},checkin_type:'timekeeper'})
+
+db.empoloyee_shifts.update({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']},checkin_type:'timekeeper'}, {$set:{checkin_type:'admin'}}, {multi:true})
+
+
+db.empoloyee_shifts.find({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']},checkout_type:'timekeeper'})
+
+db.empoloyee_shifts.update({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']},checkout_type:'timekeeper'}, {$set:{checkout_type:'admin'}}, {multi:true})
+
+
+
+
+db.time_keeper_logs.find({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']}, time:{$lt:ISODate("2019-03-26T18:19:37.793+07:00")}, time:{$gt:ISODate("2019-03-01T00:00:00.793+07:00")}, device:'timekeeper'})
+
+
+
+db.time_keeper_logs.update({user_id:{$in:['snNpDCJpnmTdkFdsC','P9pkTka26KiJ79MCW','LHCKSjnqWPPHZwZ23','i7NiCMsXywQuYxz9G']}, time:{$lt:ISODate("2019-03-26T18:19:37.793+07:00")}, time:{$gt:ISODate("2019-03-01T00:00:00.793+07:00")}, device:'timekeeper'},
+{$set:{device:'admin'},$unset:{deleted_at:'', deleted_user:''}},{multi:true})

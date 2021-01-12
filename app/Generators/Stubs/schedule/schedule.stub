@@ -1,0 +1,30 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Support\Facades\Log;
+
+class DummyClass
+{
+    /**
+     * Create a new schedule instance.
+     */
+    public function __construct(){
+        
+    }
+
+    /**
+     * Execute the schedule.
+     */
+    public static function run()
+    {
+        Log::debug('Begin Schedule: DummyClass');
+
+        //Todo here
+
+
+        Log::debug('End Schedule: DummyClass');
+
+        return true;
+    }
+}

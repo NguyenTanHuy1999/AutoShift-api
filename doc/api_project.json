@@ -1,0 +1,1 @@
+{  "name": "tanca-api",  "version": "2.0",  "description": "API FOR TANCA",  "title": "TANCA API Document",  "url": "http://api.tanca.io/api",  "sampleUrl": false,  "defaultVersion": "0.0.0",  "apidoc": "0.3.0",  "generator": {    "name": "apidoc",    "time": "2018-07-18T05:06:47.212Z",    "url": "http://apidocjs.com",    "version": "0.17.6"  }}

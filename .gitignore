@@ -1,0 +1,6 @@
+/vendor
+/public/apidoc
+sftp-config.json
+/storage
+.env
+composer.lock

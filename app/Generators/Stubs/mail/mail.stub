@@ -1,0 +1,50 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class DummyClass extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    /**
+    * @var $mailParam: list param replace into mail template.
+    * @var $mailParam['subject']: Title of email if need change.
+    **/
+    protected $mailParam = [];
+    public $subject = '';
+    /**
+     * Create a new message instance.
+     *
+     * @return void
+     */
+    public function __construct($mailParam = array()){
+        if(!empty($mailParam)){
+            $this->mailParam = $mailParam;
+
+            //Set subject if have param.
+            if(!empty($this->mailParam['subject'])){
+                $this->subject = $this->mailParam['subject'];
+                unset($this->mailParam['subject']);
+            }
+        }
+    }
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build()
+    {
+        $lang = app('translator')->getLocale();
+        $view = 'mail.name-'.$lang;
+        return $this->view($view)
+                    ->subject($this->subject)
+                    ->with($this->mailParam);
+    }
+}

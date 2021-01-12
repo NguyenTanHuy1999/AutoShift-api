@@ -1,0 +1,61 @@
+<?php
+
+namespace DummyNamespace;
+
+use App\Notifications\NotifiableTrait;
+
+class DummyClass{
+    use NotifiableTrait;
+    /**
+    * @var $param
+    *
+    **/
+    protected $params;
+
+    /**
+    * @var $activity
+    **/
+    protected $activity = "HomeActivity";
+
+    /**
+    * @var $sendToDatabase
+    **/
+    protected $isDatabase = true;
+
+    /**
+    * @var $sendToOnesignal
+    **/
+    protected $isOnesignal = true;
+    /**
+     * Create a new notification instance.
+     *
+     * @return void
+     */
+
+    public function __construct($params){
+        $this->params = $params;
+        if(empty($this->params['data'])) {
+            $this->params['data'] = [];
+        }
+        $this->params['data']['activity'] = $this->activity;
+        // $this->params['activity'] = $this->activity;
+    }
+
+    public function send(){
+        if( empty($this->params['content'])||!isset($this->params['users'])){
+            return false;
+        }
+        //Send noti to database
+        if($this->isDatabase){
+            $noti_id = $this->toDatabase($this->params);
+            $this->params['noti_id'] = $noti_id;
+        }
+
+        //Send noti to oneSignal
+        if($this->isOnesignal){
+            $this->toOneSignal($this->params);
+        }
+
+        return true;
+    }
+}
