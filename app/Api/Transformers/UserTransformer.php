@@ -53,6 +53,7 @@ class UserTransformer extends TransformerAbstract
             'position_id' => mongo_id_string($model->position_id),
             'branch_id' => mongo_id_string($model->branch_id),
             'dep_id' => mongo_id_string($model->dep_id),
+            'birth' => $model->birth,
             'shop' => [],
             'position' => [],
             'branch' => [],

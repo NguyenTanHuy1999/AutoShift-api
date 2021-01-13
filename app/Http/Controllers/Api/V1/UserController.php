@@ -73,7 +73,8 @@ class UserController extends Controller
                 'is_root' => 1,
                 'phone_number' => $this->request->get('phone_number'),
                 'shop_id' => $this->user()->shop_id,
-                'sex' => $this->request->get('sex')
+                'sex' => $this->request->get('sex'),
+                'birth' => $this->request->get('birth'),
             ];
             $user = $this->userRepository->create($userAttributes);
             return $this->successRequest($user->transform());
@@ -81,84 +82,55 @@ class UserController extends Controller
     }
 
 
-    //Bỏ chỗ này
-    public function createUser2()
-    {
+    // //Bỏ chỗ này
+    // public function createUser2()
+    // {
 
-        $validator = \Validator::make($this->request->all(), [
-            'full_name' => 'required',
-            'is_root' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return $this->errorBadRequest($validator->messages()->toArray());
-        }
-        $position = $this->request->get('position');
-        $email = strtolower($this->request->get('email'));
-        // Kiểm tra xem email đã được đăng ký trước đó chưa
-        $userCheck = User::where(['email' => $email])->first();
-        if (!empty($userCheck)) {
-            return $this->errorBadRequest(trans('user.email_exists'));
-        }
-        //Lấy shop và position để thêm user vào
-        $branch = Branch::where(['_id' => mongo_id($this->request->get('branch_id'))])->first();
-        if (empty($branch)) {
-            return $this->errorBadRequest(trans('Chưa có chi nhánh'));
-        }
-        $position = Position::where(['_id' => mongo_id($this->request->get('position_id'))])->first();
-        if (empty($position)) {
-            return $this->errorBadRequest(trans('Chưa có vị trí'));
-        }
-        $dep = Dep::where(['_id' => mongo_id($this->request->get('dep_id'))])->first();
-        if (empty($dep)) {
-            return $this->errorBadRequest(trans('Chưa có phòng ban'));
-        }
+    //     $validator = \Validator::make($this->request->all(), [
+    //         'full_name' => 'required',
+    //         'is_root' => 'required',
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return $this->errorBadRequest($validator->messages()->toArray());
+    //     }
+    //     $position = $this->request->get('position');
+    //     $email = strtolower($this->request->get('email'));
+    //     // Kiểm tra xem email đã được đăng ký trước đó chưa
+    //     $userCheck = User::where(['email' => $email])->first();
+    //     if (!empty($userCheck)) {
+    //         return $this->errorBadRequest(trans('user.email_exists'));
+    //     }
+    //     //Lấy shop và position để thêm user vào
+    //     $branch = Branch::where(['_id' => mongo_id($this->request->get('branch_id'))])->first();
+    //     if (empty($branch)) {
+    //         return $this->errorBadRequest(trans('Chưa có chi nhánh'));
+    //     }
+    //     $position = Position::where(['_id' => mongo_id($this->request->get('position_id'))])->first();
+    //     if (empty($position)) {
+    //         return $this->errorBadRequest(trans('Chưa có vị trí'));
+    //     }
+    //     $dep = Dep::where(['_id' => mongo_id($this->request->get('dep_id'))])->first();
+    //     if (empty($dep)) {
+    //         return $this->errorBadRequest(trans('Chưa có phòng ban'));
+    //     }
 
-        $userAttributes = [
-            'full_name' => $this->request->get('full_name'),
-            'email' => $email,
-            'is_web' => (int)($this->request->get('is_web')),
-            'shop_id' => mongo_id($branch->shop_id),
-            'position_id' => mongo_id($position->_id),
-            'branch_id' => mongo_id($branch->_id),
-            'dep_id' => mongo_id($dep->_id),
-            'is_root' => $this->request->get('is_root'),
-        ];
-        $user = $this->userRepository->create($userAttributes);
-        $token = $this->auth->fromUser($user);
-        return $this->successRequest($token);
-    }
-    /**
-     * @api {get} /user 1. Current user info
-     * @apiDescription (current user info)
-     * @apiGroup user
-     * @apiPermission JWT
-     * @apiVersion 0.1.0
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {
-                "error_code": 0,
-                "message": [
-                    "Successfully"
-                ],
-                "data": {
-                    "id": "d8Wn2WmmjKnBtMRED",
-                    "name": "Trung Hà",
-                    "username": "+84909224002",
-                    "email": "+84909224002@argi.com",
-                    "phone": "+84909224002",
-                    "phone_code": "84",
-                    "is_supplier": 0,
-                    "brandRepresent": "1",
-                    "company": [
-                        {
-                            "name": "name",
-                            "label": "Name",
-                            "value": "GMA"
-                        },
-                    ]
-                }
-            }
-     */
+    //     $userAttributes = [
+    //         'full_name' => $this->request->get('full_name'),
+    //         'email' => $email,
+    //         'is_web' => (int)($this->request->get('is_web')),
+    //         'shop_id' => mongo_id($branch->shop_id),
+    //         'position_id' => mongo_id($position->_id),
+    //         'branch_id' => mongo_id($branch->_id),
+    //         'dep_id' => mongo_id($dep->_id),
+    //         'is_root' => $this->request->get('is_root'),
+    //     ];
+    //     $user = $this->userRepository->create($userAttributes);
+    //     $token = $this->auth->fromUser($user);
+    //     return $this->successRequest($token);
+    // }
+
+
+    //Get detail user current
     public function userShow()
     {
         $user = $this->user();
@@ -243,6 +215,7 @@ class UserController extends Controller
                 'dep_id' => mongo_id($this->request->get('dep_id')),
                 'is_root' => $this->request->get('is_root'),
                 'phone_number' => $this->request->get('phone_number'),
+                'birth' => $this->request->get('birth'),
                 'sex' => $this->request->get('sex')
             ];
             $user = $this->userRepository->update($userAttributes, $user->_id);

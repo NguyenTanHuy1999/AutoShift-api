@@ -17,7 +17,7 @@ use Gma\Curl;
 use App\Api\Entities\EmpClock;
 use App\Api\Entities\Empshift;
 use App\Api\Entities\Shift;
-
+use App\Api\Entities\WifiConfig;
 //Google firebase
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
@@ -55,6 +55,8 @@ class EmpClockController extends Controller
     {
         $user = $this->user();
         $user_id = $user->id;
+        $branch_id = $user->branch_id;
+        $dep_id = $user->dep_id;
         //Lấy ca của user trong ngày
         $from  = Carbon::now()
             ->startOfDay()        // 2018-09-29 00:00:00.000000
@@ -64,7 +66,21 @@ class EmpClockController extends Controller
             ->endOfDay()          // 2018-09-29 23:59:59.000000
             ->toDateTime(); // 2018-09-29 23:59:59
 
+        $wifi_query = [];
 
+        if (!empty($branch_id)) {
+            $wifi_query['branch_id'] = $branch_id;
+        }
+
+        if (!empty($dep_id)) {
+            $wifi_query['dep_id'] = $dep_id;
+        }
+
+        $wifi_config = WifiConfig::where($wifi_query)->first();
+        $wifi_clocking = null;
+        if (!empty($wifi_config)) {
+            $wifi_clocking = $wifi_config->transform();
+        }
 
         // dd($from, $to);
         $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
@@ -76,7 +92,7 @@ class EmpClockController extends Controller
 
             $data[] = $emp_shift->transform();
         }
-        return $this->successRequest($data);
+        return $this->successRequest(['listShift' => $data, 'wifiClock' => $wifi_clocking]);
     }
 
 
