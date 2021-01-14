@@ -12,7 +12,7 @@ return  [
             'dump_using_single_transaction' => true, // perform dump using a single transaction
             'host' => env('DB_HOST', 'localhost'),
             'port' => env('DB_PORT', 27017),
-            'database' => env('DB_DATABASE', 'CheckIn'),
+            'database' => env('DB_DATABASE', 'AutoShift'),
             'username' => env('DB_USERNAME', 'babycare'),
             'password' => env('DB_PASSWORD', '@DB'),
             'charset' => 'utf8',
