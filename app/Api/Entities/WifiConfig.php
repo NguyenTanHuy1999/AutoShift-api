@@ -28,4 +28,21 @@ class WifiConfig extends Moloquent
 
         return $transformer->transform($this);
     }
+
+    public function branch()
+    {
+        $branch = null;
+        if (!empty($this->branch_id)) {
+            $branch = Branch::where(['_id' => $this->branch_id])->first();
+        }
+        return $branch;
+    }
+    public function dep()
+    {
+        $dep = null;
+        if (!empty($this->dep_id)) {
+            $dep = Dep::where(['_id' => mongo_id($this->dep_id)])->first();
+        }
+        return $dep;
+    }
 }

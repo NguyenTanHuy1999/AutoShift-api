@@ -19,13 +19,25 @@ class WifiConfigTransformer extends TransformerAbstract
      */
     public function transform(WifiConfig $model)
     {
-        return [
+        $data = [
             'id'    => $model->_id,
             'bssid' => $model->bssid,
             'ssid' => $model->ssid,
             'name' => $model->name,
-            'created_at' => $model->created_at,
-            'updated_at' => $model->updated_at
+            'branch' => [],
+            'dep' => []
         ];
+
+        $branch = $model->branch();
+        $dep = $model->dep();
+
+        if (!empty($branch)) {
+            $data['branch'] = $branch->transform();
+        }
+        if (!empty($dep)) {
+            $data['dep'] = $dep->transform();
+        }
+
+        return $data;
     }
 }

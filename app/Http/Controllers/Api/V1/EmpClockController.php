@@ -76,11 +76,16 @@ class EmpClockController extends Controller
             $wifi_query['dep_id'] = $dep_id;
         }
 
-        $wifi_config = WifiConfig::where($wifi_query)->first();
-        $wifi_clocking = null;
+        $wifi_config = WifiConfig::where($wifi_query)->get();
+        $wifi_clocking = [];
         if (!empty($wifi_config)) {
-            $wifi_clocking = $wifi_config->transform();
+            foreach ($wifi_config as $wifi) {
+
+                $wifi_clocking[] = $wifi->transform();
+            }
         }
+
+
 
         // dd($from, $to);
         $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
@@ -105,6 +110,7 @@ class EmpClockController extends Controller
         $user = $this->user();
         $user_id = $user->id;
         $emp_shift_id = $this->request->get('shift_id');
+        $device_network_infor = $this->request->get('netInfor');
 
 
         //Lấy thời gian lúc nhân viên bấm
@@ -135,6 +141,22 @@ class EmpClockController extends Controller
                 $shift_time = ($shift_check->time_begin) . '-' . ($shift_check->time_end);
             }
 
+            $data = [
+                'user_id' => mongo_id($user->_id),
+                'user_name' => $user->name,
+                'working_date' => $working_date,
+                'emp_shift_id' => mongo_id($emp_shift_id),
+                'shift_name' => $shift_name,
+                'shift_time' => $shift_time,
+                'shift_id' => mongo_id($shift_id),
+                'time_check' => $now,
+                'status' => $status,
+                'device_network_infor' => $device_network_infor,
+                'type' => 'check_in'
+            ];
+            // dd($data);
+            $emp_history = $this->historyRepository->create($data);
+
 
             $status = 1;
             $attribute = [
@@ -148,21 +170,7 @@ class EmpClockController extends Controller
                 'isCheckOut' => false,
             ];
 
-            $data = [
-                'user_id' => mongo_id($user->_id),
-                'user_name' => $user->name,
-                'working_date' => $working_date,
-                'emp_shift_id' => mongo_id($emp_shift_id),
-                'shift_name' => $shift_name,
-                'shift_time' => $shift_time,
-                'shift_id' => mongo_id($shift_id),
-                'time_check' => $now,
-                'status' => $status,
-                'type' => 'check_in'
-            ];
-            // dd($data);
             $emp_clock = $this->empclockRepository->create($attribute);
-            $emp_history = $this->historyRepository->create($data);
             return $this->successRequest($emp_clock->transform());
         } else {
             //ham ktra xem da vao ca hay chua
