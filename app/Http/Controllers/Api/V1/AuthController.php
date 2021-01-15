@@ -95,6 +95,6 @@ class AuthController extends Controller
                 return $this->successRequest(['token' => $token, 'user' => $userTrans]);
             }
         }
-        return $this->errorBadRequest("Đăng Nhập Thất Bại");
+        return $this->errorBadRequest("Công ty hoặc sđt chưa được khởi tạo");
     }
 }

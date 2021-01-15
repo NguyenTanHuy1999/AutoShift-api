@@ -26,7 +26,7 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
         ]);
         $api->post('dep/update', [
             'as' => 'dep.update',
-            'uses' => 'DepController@updateDep',
+            'uses' => 'DepController@editDep',
         ]);
         $api->get('dep/list', [
             'as' => 'dep.list',
@@ -41,7 +41,4 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
             'uses' => 'DepController@deleteDep',
         ]);
     });
-
-
-
 });
