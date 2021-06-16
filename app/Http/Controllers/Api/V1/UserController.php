@@ -10,6 +10,7 @@ use App\Api\Entities\Branch;
 use App\Api\Repositories\Contracts\UserRepository;
 use App\Api\Repositories\Contracts\ShopRepository;
 use App\Api\Repositories\Contracts\PositionRepository;
+use Laravel\Lumen\Routing\Controller as BaseController;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -63,21 +64,29 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return $this->errorBadRequest($validator->messages()->toArray());
             }
-            $email = strtolower($this->request->get('email'));
-            $userAttributes = [
-                'name' => $this->request->get('name'),
-                'email' => $email,
-                'position_id' => mongo_id($this->request->get('position_id')),
-                'branch_id' => mongo_id($this->request->get('branch_id')),
-                'dep_id' => mongo_id($this->request->get('dep_id')),
-                'is_root' => 1,
-                'phone_number' => $this->request->get('phone_number'),
-                'shop_id' => $this->user()->shop_id,
-                'sex' => $this->request->get('sex'),
-                'birth' => $this->request->get('birth'),
-            ];
-            $user = $this->userRepository->create($userAttributes);
-            return $this->successRequest($user->transform());
+            if ($this->request->hasFile('avatar')) {
+                $avatar_file = $this->request->file('avatar');
+                $avatar_url=  uploadImage($avatar_file);
+                $email = strtolower($this->request->get('email'));
+                $userAttributes = [
+                    'name' => $this->request->get('name'),
+                    'avatar' => $avatar_url,
+                    'email' => $email,
+                    'position_id' => mongo_id($this->request->get('position_id')),
+                    'branch_id' => mongo_id($this->request->get('branch_id')),
+                    'dep_id' => mongo_id($this->request->get('dep_id')),
+                    'is_root' => 1,
+                    'phone_number' => $this->request->get('phone_number'),
+                    'shop_id' => $this->user()->shop_id,
+                    'sex' => $this->request->get('sex'),
+                    'birth' => $this->request->get('birth'),
+                ];
+                $user = $this->userRepository->create($userAttributes);
+                return $this->successRequest($user->transform());
+            }
+            else{
+                return $this->errorBadRequest(trans('Lỗi'));
+            }
         }
     }
 

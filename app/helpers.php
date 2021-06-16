@@ -1,9 +1,10 @@
 <?php
 
 use App\Api\Entities\Role;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request as HttpRequest;
 use App\Api\Entities\Element;
@@ -929,3 +930,30 @@ if (!function_exists('get_device_info')) {
         return $device_info;
     }
 }
+
+/** 
+ * upload_image
+ * @param  Request  $request
+ * @return Response
+ **/
+if (!function_exists('uploadImage')) {
+    function uploadImage($file)
+    {
+        $original_filename = $file->getClientOriginalName();
+        $destination_path = ('uploads');
+        $file->move($destination_path, $original_filename);
+        $avatar_url = url('uploads' . '/' .$original_filename);
+        return $avatar_url;
+    }
+}
+if (!function_exists('djson')) {
+    function djson($data)
+    {   
+        print_r(json_encode($data));
+        dd();
+    }
+}
+
+    
+
+
