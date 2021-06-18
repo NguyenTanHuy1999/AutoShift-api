@@ -144,7 +144,7 @@ class EmpshiftController extends Controller
     {
         $user_id = $this->user()->_id;
         $shifts = $this->empshiftRepository
-            ->orderBy('working_date', 'desc')->findbyField('user_id', mongo_id($user_id));
+            ->orderBy('working_date', 'desc')->findbyField('user_id', $user_id);
         $data = [];
         foreach ($shifts as $shift) {
             $data[] = $shift->transform();
