@@ -23,8 +23,13 @@ class SalaryTransformer extends TransformerAbstract
         $id=$model->user_id;
         return [
             'user_id'=> $model->user_id,
-            'work_time'=>$model->work_time,
-            'salary'=>$model->salary,
+            'total_work_time'=>$model->total_work_time,
+            'total_work_day'=>$model->total_work_day,
+            'total_late_check_in'=>$model->total_late_check_in,
+            'total_soon_check_out'=>$model->total_soon_check_out,
+            'month'=>$model->month,
+            'year' =>$model->year,
+            'real_salary'=>$model->real_salary
         ];
     }
 }

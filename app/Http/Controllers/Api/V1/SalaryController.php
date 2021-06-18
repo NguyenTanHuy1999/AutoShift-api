@@ -9,6 +9,7 @@ use App\Api\Repositories\Contracts\EmpshiftRepository;
 use App\Api\Repositories\Contracts\UserRepository;
 use App\Api\Repositories\Contracts\EmpClockRepository;
 use App\Api\Repositories\Contracts\SalaryRepository;
+use App\Api\Repositories\Contracts\HistoryRepository;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ use App\Api\Entities\User;
 use App\Api\Entities\Empshift;
 use App\Api\Entities\EmpClock;
 use App\Api\Entities\Salary;
+use App\Api\Entities\History;
 //Google firebase
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
@@ -26,16 +28,17 @@ use Kreait\Firebase\ServiceAccount;
 class SalaryController extends Controller
 {
     protected $empshiftRepository;
-    protected  $userRepository;
+    protected $userRepository;
     protected $empclockRepository;
     protected $salaryRepository;
 
     protected $auth;
 
     protected $request;
-    public function __construct(  AuthManager $auth,
-                                  Request $request,
-                                  SalaryRepository $salaryRepository)
+    public function __construct(  
+        AuthManager $auth,                       
+        Request $request,                           
+        SalaryRepository $salaryRepository)
     {
         $this->request = $request;
         $this->auth = $auth;
@@ -61,46 +64,83 @@ class SalaryController extends Controller
 
     #region tao ca lam
 
-    
+    //Create Salary
+    public function createSalary()
+    {   
+        
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+        $list_user = [];
+        //Danh sách User của shop
+        $listUser = User::where(['shop_id' => $shop_id])->get();
+       
+       
+        if (!empty($listUser)) {
+            foreach ($listUser as $user) {
+                $list_user[] = $user->transform();
+            }
+        }
+        
+        for($i=0;$i<count($list_user,COUNT_NORMAL);$i++){
+            $user_id = ($list_user[$i]["id"]);
+            //List Empshift trong thang
+            $from_date =Carbon::parse('2021-01-01 00:00:00');//Người dùng chọn ngày
+            $to_date = Carbon::parse('2021-01-31 23:00:00');//Người dùng chọn ngày
+            $month = $from_date ->month;
+            $year = $from_date ->year;
+            $listEmpShift = Empshift::where('user_id','=',$user_id)->where('working_date','>=',$from_date)->where('working_date','<=',$to_date)->get();
+            $total_work_read = count($listEmpShift,COUNT_NORMAL)/2;
+            $listHistory = History::where(['user_id' => $user_id,'type'=>'check_out','month'=>$month,'year'=>$year])->get();
+            $total_work_time=0;
+            $total_work_day=0;
+            $total_late_check_in=0;
+            $total_soon_check_out=0;
+            for($j=0;$j<count($listHistory,COUNT_NORMAL);$j++){
+                $total_work_time = $total_work_time + ($listHistory[$j]["real_working_hours"]);
+                $total_work_day = $total_work_day + 0.5;
+                $total_late_check_in = $total_late_check_in + ($listHistory[$j]["late_check_in"]);
+                $total_soon_check_out = $total_soon_check_out + ($listHistory[$j]["soon_check_out"]);    
+            }
+            
 
+            $real_salary = 6000000*($total_work_day/$total_work_read);//Lương cố định sẽ được tạo cùng với user
 
-
-
+            $data = [
+                'user_id'=> $user_id,
+                'total_work_time'=>$total_work_time,
+                'total_work_day'=>$total_work_day,
+                'total_late_check_in'=>$total_late_check_in,
+                'total_soon_check_out'=>$total_soon_check_out,
+                'month'=>$month,
+                'year' =>$year,
+                'real_salary'=>$real_salary
+            ];
+            $emp_salary = $this->salaryRepository->create($data);
+        }
+        return $this->successRequest($emp_salary->transform());
+    }  
+    //View Salary
     public  function viewSalary()
-    {
-//        Log::debug('test1');
-        $user=$this->user();
+    {   
+        //Chọn mốc thời gian để xem dánh sách lương
+        $from_date =Carbon::parse('2021-01-01 00:00:00');//Người dùng chọn ngày
+        $to_date = Carbon::parse('2021-01-31 23:00:00');//Người dùng chọn ngày
+        $month = $from_date ->month;
+        $year = $from_date ->year;
 
-        $salarys=Salary::where(['user_id'=>($user->_id)])->get();
-        //  $salarys=Salary::select('user_id','SUM(work_time) as work_time','SUM(salary) as salary')->get();
-        // $salarys=Salary::select('user_id','work_time','salary')->get();
-        // dd($salarys);
-        //Luu cong va luong vao mang user_sal
-        $user_sal=[];
-        foreach($salarys as $salary){
 
-            $user_sal[]=$salary->transform();
-
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+        $list_user = [];
+        //Danh sách User của shop
+        $listUser = User::where(['shop_id' => $shop_id])->get();
+        foreach ($listUser as $users) {
+            $user_id = $users->_id;
+            $emp_salarys=Salary::where(['user_id'=>$user_id,'month'=>$month,'year'=>$year])->get();
+            $emp_sal[]= $emp_salarys;
+            
         }
-        //tao mang user de tinh tong cong va luong
-        $user=[
-            "user_id"=>$user->_id,
-            "work_time"=>NULL,
-            "salary"=>NULL
-        ];
-        //ham tinh tong cong va luong
-        $sum_time=0;
-        $sum_sal=0;
-        for($i=0;$i<count($user_sal,COUNT_NORMAL);$i++){
-            $sum_time=$sum_time+($user_sal[$i]["work_time"]);
-            $sum_sal=$sum_sal+($user_sal[$i]["salary"]);
-            // dd($sum_sal);
-        }
-        //push tong cong va luong vao user
-        $user["work_time"]=$sum_time;
-        $user["salary"]=$sum_sal;
-        // dd($user);
-        return $this->successRequest($user);
+        return $this->successRequest($emp_sal);
     }
     //Check khoảng thời gian check in và check out với thời gian trong bảng timeshift
 }
