@@ -4,10 +4,18 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Api\Repositories\Contracts\BranchRepository;
 use App\Api\Repositories\Contracts\DepRepository;
+use App\Api\Repositories\Contracts\ShopRepository;
+use App\Api\Repositories\Contracts\UserRepository;
+use App\Api\Repositories\Contracts\ShiftRepository;
+use App\Api\Repositories\Contracts\EmpshiftRepository;
+use App\Api\Repositories\Contracts\WifiConfigRepository;
+use App\Api\Repositories\Contracts\HistoryRepository;
+use App\Api\Repositories\Contracts\EmpClockRepository;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\PositionController;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\AuthManager;
@@ -15,6 +23,15 @@ use Gma\Curl;
 use App\Api\Entities\Dep;
 use App\Api\Entities\Branch;
 use App\Api\Entities\User;
+use App\Api\Entities\Shop;
+use App\Api\Entities\EmpClock;
+use App\Api\Entities\Shift;
+use App\Api\Entities\Empshift;
+use App\Api\Entities\Salary;
+use App\Api\Entities\History;
+use App\Api\Entities\WifiConfig;
+
+
 
 //Google firebase
 use Kreait\Firebase\Factory;
@@ -30,24 +47,43 @@ class DepController extends Controller
      * @var UserRepository
      */
     protected $branchRepository;
+    protected $userRepository;
+    protected $shiftRepository;
+    protected $wifiConfigRepository;
+    protected $historyRepository;
+    protected $empclockRepository;
 
     /**
      * @var ShopRepository
      */
     protected $depRepository;
-
+    protected $empshiftRepository;
+    protected $shopRepository;
     protected $auth;
-
     protected $request;
 
     public function __construct(
         BranchRepository $branchRepository,
+        WifiConfigRepository $wifiConfigRepository,
+        EmpClockRepository $empClockRepository,
         DepRepository $depRepository,
+        UserRepository $userRepository,
+        ShopRepository $shopRepository,
+        ShiftRepository $shiftRepository,
+        EmpshiftRepository $empshiftRepository,
+        HistoryRepository $historyRepository,
         AuthManager $auth,
         Request $request
     ) {
         $this->branchRepository = $branchRepository;
         $this->depRepository = $depRepository;
+        $this->shopRepository = $shopRepository;
+        $this->userRepository = $userRepository;
+        $this->shiftRepository = $shiftRepository;
+        $this->empshiftRepository = $empshiftRepository;
+        $this->wifiConfigRepository = $wifiConfigRepository;
+        $this->historyRepository = $historyRepository;
+        $this->empclockRepository = $empClockRepository;
         $this->request = $request;
         $this->auth = $auth;
         parent::__construct();
@@ -69,6 +105,332 @@ class DepController extends Controller
      * }
      */
 
+     public function fakedata()
+     {
+        $depList = [];
+        $userList = [];
+        $branchList =[];
+        $shiftList =[];
+        $empShiftList =[];
+        $wifiList = [];
+         //Fake shop 
+         // Tạo shop trước
+        $attributesShop = [
+            'name' => 'DUYKHANH',
+            'shop_name' => $this->request->get('shop_name'),
+            'email' => $this->request->get('name'),
+        ];
+        $shop = $this->shopRepository->create($attributesShop);
+        //Shop_id
+        $shop_id = $shop['_id'];
+        //Fake branch
+        $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
+        for ($i=0; $i <3; $i++) { 
+            $random_keys=array_rand($branchListName);
+            $attributesDep = [
+                'name' => $branchListName[$random_keys],
+                'address' => 'Long An',
+                'shop_id' => $shop_id,
+                'note' => $this->request->get('note'),
+            ];
+            $branch = $this->branchRepository->create($attributesDep);
+            $branchList[]=$branch;
+        }
+        //Fake dep
+        $depListName = [ 'IT ' ,'HR','OJI','SE','Marketing','Accounting','Human Resource','Financial','Pulic Relations','Training','Sales'];
+
+        for ($i=0; $i <4 ; $i++) { 
+            $random_keys=array_rand($depListName);
+            $random_keys1=array_rand($branchList);
+            $branch_id = $branchList[$random_keys1]["_id"];
+            $attributes = [
+                'name' => $depListName[$random_keys],
+                'branch_id' => $branch_id,
+                'shop_id' => $shop_id,
+                'note' => $this->request->get('note')
+            ];
+            $dep = $this->depRepository->create($attributes);
+            $depList[]= $dep;
+        }
+        //Fake user
+        $userListName= ['Huy','Trung','An','Bảo','Phúc','Khánh','Tâm','Tú'];
+        $listPhone = ['1','2','3','4','5','6','7','8','9'];
+        for ($i=0; $i <3 ; $i++) { 
+            $random_keys0=array_rand($userListName);
+            $random_keys=array_rand($depList);
+            $dep_id = $depList[$random_keys]["_id"];
+            $branch_id =$depList[$random_keys]["branch_id"];
+            $random_keys2=array_rand($listPhone);
+            $userAttributes = [
+                'name' => $userListName[$random_keys0],
+                'avatar' => 'http://192.168.1.5:8081/uploads/TanHuy.jpg',
+                'email' => 'admin@gmail.com',
+                'position_id' => null,
+                'branch_id' => $branch_id,
+                'dep_id' => $dep_id,
+                'is_root' => 1,
+                'phone_number' => $listPhone[$random_keys2],
+                'shop_id' => $shop_id,
+                'sex' => '1',
+                'birth' => '1999-11-07',
+            ];
+            $user = $this->userRepository->create($userAttributes);
+            $userList[]=$user;
+        }
+        //Fake Shift
+        // Tạo ca lớn
+        $shiftListName =['Ca Sáng','Ca Chiều'];
+        $listTimeBegin =['8:00','13:30'];
+        $listTimeEnd=['12:00','17:30'];
+        $assignments=[
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+        ];
+        for ($i=0; $i <2 ; $i++) { 
+            $random_keys=array_rand($depList);
+            $dep_id = $depList[$random_keys]["_id"];
+            $random_keys1=array_rand($branchList);
+            $branch_id = $branchList[$random_keys1]["_id"];
+            $attributes = [
+                'name' => $shiftListName[$i],
+                'shop_id' => $shop_id,
+                'branch_ids' => $branch_id,
+                'dep_ids' => $dep_id,
+                'time_begin' => $listTimeBegin[$i],
+                'time_end' => $listTimeEnd[$i],
+                'shift_key' => $shiftListName[$i],
+                'assignments' => $assignments,
+            ];
+            $shift = $this->shiftRepository->create($attributes);
+            $shiftList[]=$shift;
+            //Tạo ca cho từng nhân viên
+            //Tạo ca trong 1 năm
+            
+            $work_date_begin = Carbon::now()->startofYear();
+            $work_date_end = Carbon::now()->endOfYear();
+            //Khoảng thờI gian khởi tạo ca
+            $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
+            foreach ($userList as $user) {
+                foreach ($work_date as $day) {
+                    $dayOfWeek = $day->dayOfWeek;
+                    $user_id = $user['_id'];
+                    $weekMap = [
+                        0 => 'SUN',
+                        1 => 'MON',
+                        2 => 'TUE',
+                        3 => 'WED',
+                        4 => 'THU',
+                        5 => 'FRI',
+                        6 => 'SAT',
+                    ];
+                    if ($assignments[$dayOfWeek]) {
+                        $attributes = [
+                            'shift_name' => $shiftListName[$i],
+                            'user_id' => $user_id,
+                            'shift_id' => $shiftList[$i]["_id"],
+                            'working_date' => $day,
+                            'time_begin' => $listTimeBegin[$i],
+                            'time_end' => $listTimeEnd[$i],
+                            'checkin_time' => null,
+                            'checkout_time' => null,
+                            'dayOfWeek' => $weekMap[$dayOfWeek]
+                        ];
+                        $empShift=$this->empshiftRepository->create($attributes);
+                        $empShiftList[]=$empShift;
+                    }
+                }
+            }
+        }
+        //Fake Wifi
+        $listNameWife =['Wifi Company','Wifi School'];
+        $listSsid =['My Company','My School'];
+        for ($i=0; $i <2 ; $i++) { 
+            $random_keys=array_rand($depList);
+            $dep_id = $depList[$random_keys]["_id"];
+            $branch_id =$depList[$random_keys]["branch_id"];
+            $attributes = [
+                'name' => $listNameWife[$i],
+                'bssid' => '44:fb:5a:91:d5:7a',
+                'ssid' => $listSsid[$i],
+                'branch_id' => $branch_id,
+                'dep_id' => $dep_id,
+                'shop_id' => $shop_id
+            ];
+            $wifi = $this->wifiConfigRepository->create($attributes);
+            $wifiList[]=$wifi;
+        }
+        //Fake EmpClock ca sáng
+        //shift_id ca sáng
+        $shift_id = $shiftList[0]["_id"];
+        $shift_name = $shiftList[0]["name"];
+        $work_date_begin = Carbon::now()->startofYear();
+        $work_date_end = Carbon::now();
+        //Khoảng thờI gian khởi tạo ca
+        $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
+        foreach ($userList as $user) {
+            foreach ($work_date as $day) {
+                $dayOfWeek = $day->dayOfWeek;
+                if ($assignments[$dayOfWeek]) {
+                    $time_check = $day->addHour(7)->addMinute(55)->addMinutes(rand(1,20));
+                    $user_id = $user['_id'];
+                    $user_name =$user['name'];
+                    $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id)->where('working_date','<=',$day)->get();
+                    //Các biến random
+                    $late_check_in = rand(1,1800);
+                    $soon_check_out = rand(1,1800);
+                    $real_working_hours =14400- ($late_check_in +  $soon_check_out );
+                    
+                    $i = count($emp_shift,COUNT_NORMAL);
+                    $working_date = $emp_shift[$i-1]["working_date"];
+                    // dd($working_date);
+                    $emp_shift_id = $emp_shift[$i-1]["_id"];
+                   
+                    //History check in
+                    $data = [
+                        'user_id' => $user_id,
+                        'user_name' => $user_name,
+                        'working_date' => $working_date,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_name' => $shift_name,
+                        'shift_time' => '8:00-12:00',
+                        'shift_id' => $shift_id,
+                        'time_check' => $time_check,
+                        'status' => 1,
+                        'device_network_infor' => $wifiList[0],
+                        'type' => 'check_in'
+                    ];
+                    $emp_history = $this->historyRepository->create($data);
+                    //dd($emp_history);
+                    //EmpClock check in
+                    $attribute = [
+                        'user_id' => $user_id,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_id' => $shift_id,
+                        'time_in' => $time_check,
+                        'time_out' => null,
+                        'status' => 1,
+                        'isCheckOut' => false,
+                    ];
+                    //EmpClock check out
+                    $emp_clock = $this->empclockRepository->create($attribute);
+                    $clock_check =EmpClock::where(['user_id' => $user_id,'isCheckOut' => false])->first();
+                    $attribute1 = [
+                        'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,20)),
+                        'status' => 0,
+                        'isCheckOut' => true,
+                    ];
+                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+                    //History check out
+                    $data1 = [
+                        'user_id' => $user_id,
+                        'user_name' => $user_name,
+                        'working_date' => $working_date,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_id' => $shift_id,
+                        'shift_name' => $shift_name,
+                        'shift_time' => '8:00-12:00',
+                        'time_check' => $time_check,
+                        'status' => 0,
+                        'type' => 'check_out',
+                        'real_working_hours'=>$real_working_hours,
+                        'late_check_in' =>$late_check_in,
+                        'soon_check_out' =>$soon_check_out,
+                        'month' =>$day->month,
+                        'year' =>$day->year,
+                    ];
+                    $emp_history = $this->historyRepository->create($data1);
+                    //djson($emp_history);
+                }
+            }
+        }
+
+        //Fake EmpClock ca chiều
+        //shift_id Ca chiều
+        $shift_id1 = $shiftList[1]["_id"];
+        $shift_name1 = $shiftList[1]["name"];
+        foreach ($userList as $user) {
+            foreach ($work_date as $day) {
+                $dayOfWeek = $day->dayOfWeek;
+                if ($assignments[$dayOfWeek]) {
+                    $time_check = $day->addHours(13)->addMinute(25)->addMinutes(rand(1,20));
+                    //dd($time_check);
+                    $user_id = $user['_id'];
+                    $user_name =$user['name'];
+                    $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id1)->where('working_date','<=',$day)->get();
+                    //Các biến random
+                    $late_check_in = rand(1,1800);
+                    $soon_check_out = rand(1,1800);
+                    $real_working_hours =14400- ($late_check_in +  $soon_check_out );
+
+                    $i = count($emp_shift,COUNT_NORMAL);
+                    $working_date = $emp_shift[$i-1]["working_date"];
+                    // dd($working_date);
+                    $emp_shift_id = $emp_shift[$i-1]["_id"];
+                    //History check in
+                    $data = [
+                        'user_id' => $user_id,
+                        'user_name' => $user_name,
+                        'working_date' => $working_date,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_name' => $shift_name1,
+                        'shift_time' => '13:30-17:30',
+                        'shift_id' => $shift_id1,
+                        'time_check' => $time_check,
+                        'status' => 1,
+                        'device_network_infor' => $wifiList[0],
+                        'type' => 'check_in'
+                    ];
+                    $emp_history = $this->historyRepository->create($data);
+        
+                    //EmpClock check in
+                    $attribute = [
+                        'user_id' => $user_id,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_id' => $shift_id1,
+                        'time_in' => $time_check,
+                        'time_out' => null,
+                        'status' => 1,
+                        'isCheckOut' => false,
+                    ];
+                    //EmpClock check out
+                    $emp_clock = $this->empclockRepository->create($attribute);
+                    $clock_check =EmpClock::where(['user_id' => $user_id,'isCheckOut' => false])->first();
+                    $attribute1 = [
+                        'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,30)),
+                        'status' => 0,
+                        'isCheckOut' => true,
+                    ];
+                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+                    //History check out
+                    $data1 = [
+                        'user_id' => $user_id,
+                        'user_name' => $user_name,
+                        'working_date' => $working_date,
+                        'emp_shift_id' => $emp_shift_id,
+                        'shift_id' => $shift_id1,
+                        'shift_name' => $shift_name1,
+                        'shift_time' => '13:30-17:30',
+                        'time_check' => $day,
+                        'status' => 0,
+                        'type' => 'check_out',
+                        'real_working_hours'=>$real_working_hours,
+                        'late_check_in' =>$late_check_in,
+                        'soon_check_out' =>$soon_check_out,
+                        'month' =>$day->month,
+                        'year' =>$day->year,
+                    ];
+                    $emp_history = $this->historyRepository->create($data1);
+                }
+            }
+        }
+       
+    }//end Fake data
+
     #region tao phong ban
     public function registerDep()
     {
@@ -85,7 +447,7 @@ class DepController extends Controller
 
         $depname = $this->request->get('name');
         $branchCheck = Branch::where(['_id' => mongo_id($this->request->get('branch_id')),])->first();
-        $depCheck = Dep::where(['name' => $depname, 'shop_id' => mongo_id($branchCheck->shop_id)])->first();
+        $depCheck = Dep::where(['name' => $depname, 'branch_id' => mongo_id($branchCheck->_id)])->first();
 
         // dd($depCheck->name);
         if (empty($branchCheck)) {

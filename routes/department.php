@@ -19,6 +19,11 @@ $api = app('Dingo\Api\Routing\Router');
 // v1 version API
 $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($api) {
     $api->group(['middleware' => ['api.locale']], function ($api) {
+        //fake data
+        $api->post('dep/register1', [
+            'as' => 'dep.register',
+            'uses' => 'DepController@fakedata',
+        ]);
         //Login
         $api->post('dep/register', [
             'as' => 'dep.register',
@@ -26,7 +31,7 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
         ]);
         $api->post('dep/update', [
             'as' => 'dep.update',
-            'uses' => 'DepController@editDep',
+            'uses' => 'DepController@updateDep',
         ]);
         $api->get('dep/list', [
             'as' => 'dep.list',
