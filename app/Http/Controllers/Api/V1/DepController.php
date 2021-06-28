@@ -153,23 +153,25 @@ class DepController extends Controller
             $depList[]= $dep;
         }
         //Fake user
-        $userListName= ['Huy','Trung','An','Bảo','Phúc','Khánh','Tâm','Tú'];
-        $listPhone = ['1','2','3','4','5','6','7','8','9'];
-        for ($i=0; $i <3 ; $i++) { 
-            $random_keys0=array_rand($userListName);
+        $userListName= ['Gia Bảo','Tô Bảo','Hoàng Ca','Mai Chung','Đỗ Cường','Thái Dương','Ngọc Đại','Hồng Đạo','Tiến Đạt','Hồng Điệp','Văn Đức',
+        'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Tấn Huy','Phú Huy','Đăng Huy',
+        'Huy Hùng','Ngọc Hưng','Đức Khang','Tường Khải','Cơ Khánh','Toàn Khoa','Đăng Khoa','Đình Khôi','Trung Kiên','Thanh Lâm','Hải Long',
+        'Tuyên Long','Quang Minh','Phuong Nam','Trọng Ngôn','Kiều Oanh','Trần Phú','Minh Phú','Đăng Quang','Nhật Quang','Quang Quyền','Đình Sơn',
+        'Phúc Sơn','Thiện Tâm','Hồng Thái','Huy Thắng','Văn Thắng','Hoàng Thi','Hưng Thịnh','Minh Thu','Thị Thư','Trung Thường','Hưng Tiến','Quang Tịnh','Văn Triều',
+        'Minh Triết','Đức Trọng','Minh Trí','Toàn Trung','Trung Trường','Anh Tuấn','Quang Tùng','Minh Tú','Minh Vũ','Lê Vương','Chí Hòa','Thu Mai'];
+        for ($i=0; $i <count($userListName,COUNT_NORMAL) ; $i++) { 
             $random_keys=array_rand($depList);
             $dep_id = $depList[$random_keys]["_id"];
             $branch_id =$depList[$random_keys]["branch_id"];
-            $random_keys2=array_rand($listPhone);
             $userAttributes = [
-                'name' => $userListName[$random_keys0],
-                'avatar' => 'http://192.168.1.5:8081/uploads/TanHuy.jpg',
+                'name' => $userListName[$i],
+                'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
                 'email' => 'admin@gmail.com',
                 'position_id' => null,
                 'branch_id' => $branch_id,
                 'dep_id' => $dep_id,
                 'is_root' => 1,
-                'phone_number' => $listPhone[$random_keys2],
+                'phone_number' => (string)($i+1),
                 'shop_id' => $shop_id,
                 'sex' => '1',
                 'birth' => '1999-11-07',
