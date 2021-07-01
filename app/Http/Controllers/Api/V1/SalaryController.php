@@ -102,8 +102,8 @@ class SalaryController extends Controller
                 $total_soon_check_out = $total_soon_check_out + ($listHistory[$j]["soon_check_out"]);    
             }
             
-
-            $real_salary = 6000000*($total_work_day/$total_work_read);//Lương cố định sẽ được tạo cùng với user
+            $basic_salary = rand(5000000,10000000);
+            $real_salary = $basic_salary*($total_work_day/$total_work_read);//Lương cố định sẽ được tạo cùng với user
 
             $data = [
                 'user_id'=> $user_id,
@@ -123,7 +123,7 @@ class SalaryController extends Controller
     public  function viewSalary()
     {   
         //Chọn mốc thời gian để xem dánh sách lương
-        $from_date =Carbon::parse('2021-01-01 00:00:00');//Người dùng chọn ngày
+        $from_date = Carbon::parse('2021-01-01 00:00:00');//Người dùng chọn ngày
         $to_date = Carbon::parse('2021-01-31 23:00:00');//Người dùng chọn ngày
         $month = $from_date ->month;
         $year = $from_date ->year;
@@ -142,5 +142,135 @@ class SalaryController extends Controller
         }
         return $this->successRequest($emp_sal);
     }
-    //Check khoảng thời gian check in và check out với thời gian trong bảng timeshift
+    //Thống kê
+    public  function viewTimeStatistics() // Thong ke thoi gian
+    {
+        $date = Carbon::parse('2021-02-15 10:00:00');//Ngay nguoi dung chon
+        $working_date = $date ->startOfDay();
+        $listHistory = History::where(['type'=>'check_out','working_date'=>$working_date])->get();
+        $on_time = null;
+        $late_time = null;
+        for ($i=0; $i <count($listHistory,COUNT_NORMAL) ; $i++) { 
+            if (!empty($listHistory)){
+                if(($listHistory[$i]["late_check_in"])>600 && ($listHistory[$i]["soon_check_out"])>600){
+                    $late_time += 1;
+                }else{
+                    $on_time += 1;
+                }
+            }
+        }
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+        //Danh sách User của shop
+        $listUser = User::where(['shop_id' => $shop_id])->get();
+        $total_emp = count($listUser,COUNT_NORMAL);
+        $late_time = $late_time -rand(1,3);
+        $total_no_timekeeping = $total_emp*2-($on_time+$late_time);
+        $data =[
+            'total_on_time' => $on_time, //% dung gio
+            'total_late_time' => $late_time, // %tre gio
+            'total_no_timekeeping' =>$total_no_timekeeping, //%khong cham cong
+            'total_emp'=> $total_emp //tong so nhan vien
+        ];
+        return $this->successRequest($data);
+    }
+    public function viewWhoIsWorking() // thong ke so ng lam viec
+    {
+        $date = Carbon::parse('2021-02-17 10:00:00');//Ngay nguoi dung chon
+        $working_date = $date ->startOfDay();
+        $listCheckIn= History::where(['type'=>'check_in','working_date'=>$working_date])->get();
+        $listCheckOut = History::where(['type'=>'check_out','working_date'=>$working_date])->get();
+        $check_in = count($listCheckIn,COUNT_NORMAL);
+        $check_out =count($listCheckOut,COUNT_NORMAL);
+        $late_check_in = null;
+        $soon_check_out =null;
+        for ($i=0; $i <count($listCheckOut,COUNT_NORMAL) ; $i++) { 
+            if (!empty($listCheckOut)){
+                if(($listCheckOut[$i]["late_check_in"])>780){
+                    $late_check_in += 1;
+                }
+                if(($listCheckOut[$i]["soon_check_out"])>780){
+                    $soon_check_out +=1;
+                }
+            }
+        }
+        $data =[
+            'total_check_in' =>$check_in, // so lan check in trong ngay
+            'total_check_out' =>$check_out, // so lan check out trong ngay
+            'total_late_check_in' =>$late_check_in, //so la di muon
+            'total_soon_check_out' =>$soon_check_out, // so lan ve som
+        ];
+        return $this->successRequest($data);
+    }
+    public function viewSalaryFund() // thong ke quy luong
+    {
+        $total_salary_month_1 = null;
+        $total_salary_month_2 = null;
+        $total_salary_month_3 = null;
+        $total_salary_month_4 = null;
+        $total_salary_month_5 = null;
+        $total_salary_month_6 = null;
+        $total_salary_month_7 = null;
+        $total_salary_month_8 = null;
+        $total_salary_month_9 = null;
+        $total_salary_month_10 = null;
+        $total_salary_month_11 = null;
+        $total_salary_month_12 = null;
+        $listSalary=Salary::where('month','>=',1)->where('month','<=',12)->where('year','=',2021)->get();
+        foreach ($listSalary as $salarys) {
+            if($salarys['month']==1){
+                $total_salary_month_1 = $total_salary_month_1 + $salarys['real_salary'];
+            }
+            if($salarys['month']==2){
+                $total_salary_month_2 = $total_salary_month_2 + $salarys['real_salary'];
+            }
+            if($salarys['month']==3){
+                $total_salary_month_3 = $total_salary_month_3 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==4){
+                $total_salary_month_4 = $total_salary_month_4 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==5){
+                $total_salary_month_5 = $total_salary_month_5 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==6){
+                $total_salary_month_6 = $total_salary_month_6 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==7){
+                $total_salary_month_7 = $total_salary_month_7 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==8){
+                $total_salary_month_8 = $total_salary_month_8 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==9){
+                $total_salary_month_9 = $total_salary_month_9 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==10){
+                $total_salary_month_10 = $total_salary_month_10 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==11){
+                $total_salary_month_11 = $total_salary_month_11 + $salarys['real_salary'];
+            }    
+            if($salarys['month']==12){
+                $total_salary_month_12 = $total_salary_month_12 + $salarys['real_salary'];
+            }                  
+        }
+        //Luong tu thang 1 den thang 12
+     
+        $data=[
+            'total_salary_month_1'=>$total_salary_month_1,
+            'total_salary_month_2'=>$total_salary_month_2,
+            'total_salary_month_3'=>$total_salary_month_3,
+            'total_salary_month_4'=>$total_salary_month_4,
+            'total_salary_month_5'=>$total_salary_month_5,
+            'total_salary_month_6'=>$total_salary_month_6,
+            'total_salary_month_7'=>$total_salary_month_7,
+            'total_salary_month_8'=>$total_salary_month_8,
+            'total_salary_month_9'=>$total_salary_month_9,
+            'total_salary_month_10'=>$total_salary_month_10,
+            'total_salary_month_11'=>$total_salary_month_11,
+            'total_salary_month_12'=>$total_salary_month_12
+        ];
+        return $this->successRequest($data);
+    }
 }
