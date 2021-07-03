@@ -187,6 +187,7 @@ $app->group(['namespace' => 'App\Http\Controllers'], function ($app) {
     require __DIR__ . '/../routes/salary.php';
     require __DIR__ . '/../routes/history.php';
     require __DIR__ . '/../routes/configClock.php';
+    require __DIR__ . '/../routes/timekeepConfig.php';
 });
 
 return $app;
