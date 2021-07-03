@@ -59,6 +59,8 @@ class UserController extends Controller
                 'dep_id' => 'nullable',
                 'branch_id' => 'nullable',
                 'phone_number' => 'required',
+                'timekeep_config' => 'required',
+                'basic_salary' => 'required',
                 'sex' => 'nullable',
             ]);
             if ($validator->fails()) {
@@ -68,6 +70,8 @@ class UserController extends Controller
                 $avatar_file = $this->request->file('avatar');
                 $avatar_url=  uploadImage($avatar_file);
                 $email = strtolower($this->request->get('email'));
+                $timekeep_config = $this->request->get('timekeep_config');
+                $basic_salary = $this->request->get('basic_salary');
                 $userAttributes = [
                     'name' => $this->request->get('name'),
                     'avatar' => $avatar_url,
@@ -77,6 +81,8 @@ class UserController extends Controller
                     'dep_id' => mongo_id($this->request->get('dep_id')),
                     'is_root' => 1,
                     'phone_number' => $this->request->get('phone_number'),
+                    'timekeep_config' =>$timekeep_config,
+                    'basic_salary' => $basic_salary,
                     'shop_id' => $this->user()->shop_id,
                     'sex' => $this->request->get('sex'),
                     'birth' => $this->request->get('birth'),
@@ -85,7 +91,7 @@ class UserController extends Controller
                 return $this->successRequest($user->transform());
             }
             else{
-                return $this->errorBadRequest(trans('Lỗi'));
+                return $this->errorBadRequest(trans('Lỗi về chọn avatar'));
             }
         }
     }

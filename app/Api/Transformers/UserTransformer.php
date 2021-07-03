@@ -47,6 +47,8 @@ class UserTransformer extends TransformerAbstract
             'avatar' => $model->avatar,
             'full_name' => $model->full_name,
             'phone_number' => $model->phone_number,
+            'timekeep_config' =>$model->timekeep_config,
+            'basic_salary' =>$model->basic_salary,
             'email' => $model->email,
             'is_root' => (int)$model->is_root,
             'sex' => (int) $model->sex,
