@@ -11,6 +11,7 @@ use App\Api\Repositories\Contracts\EmpshiftRepository;
 use App\Api\Repositories\Contracts\WifiConfigRepository;
 use App\Api\Repositories\Contracts\HistoryRepository;
 use App\Api\Repositories\Contracts\EmpClockRepository;
+use App\Api\Repositories\Contracts\TimekeepConfigRepository;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\PositionController;
@@ -30,6 +31,7 @@ use App\Api\Entities\Empshift;
 use App\Api\Entities\Salary;
 use App\Api\Entities\History;
 use App\Api\Entities\WifiConfig;
+use App\Api\Entities\TimekeepConfig;
 
 
 
@@ -52,6 +54,7 @@ class DepController extends Controller
     protected $wifiConfigRepository;
     protected $historyRepository;
     protected $empclockRepository;
+    protected $timekeepConfigRepository;
 
     /**
      * @var ShopRepository
@@ -72,6 +75,7 @@ class DepController extends Controller
         ShiftRepository $shiftRepository,
         EmpshiftRepository $empshiftRepository,
         HistoryRepository $historyRepository,
+        TimekeepConfigRepository $timekeepConfigRepository,
         AuthManager $auth,
         Request $request
     ) {
@@ -84,6 +88,7 @@ class DepController extends Controller
         $this->wifiConfigRepository = $wifiConfigRepository;
         $this->historyRepository = $historyRepository;
         $this->empclockRepository = $empClockRepository;
+        $this->timekeepConfigRepository = $timekeepConfigRepository;
         $this->request = $request;
         $this->auth = $auth;
         parent::__construct();
@@ -113,6 +118,7 @@ class DepController extends Controller
         $shiftList =[];
         $empShiftList =[];
         $wifiList = [];
+        $timekeepConfigList =[];
          //Fake shop 
          // Tạo shop trước
         $attributesShop = [
@@ -152,6 +158,44 @@ class DepController extends Controller
             $dep = $this->depRepository->create($attributes);
             $depList[]= $dep;
         }
+        //Fake timekeep_config
+        $timekeep_name = 'Home';
+        $timekeep_ssid = 'My Huyen';
+        $timekeep_bssid = '44:fb:5a:91:d5:7a';
+        $timekeep_long ='10.523153';
+        $timekeep_lat = '106.716475';
+        $timekeep_address = 'Long An';
+        $timekeep_imageRequire = 'false';
+
+
+       
+        $wifi = [
+            'ssid' =>$timekeep_ssid,
+            'bssid' =>$timekeep_bssid
+        ];
+        $location =[
+            'long' =>$timekeep_long,
+            'lat' => $timekeep_lat,
+            'address' =>$timekeep_address
+        ];
+
+
+        $timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
+
+
+        if (!empty($timekeeConfigCheck)) {
+            return $this->errorBadRequest('Timekeep_config đã được sử dụng');
+        }
+        $attributes = [
+            'name' => $timekeep_name,
+            'wifi' =>$wifi,
+            'location' =>$location,
+            'imageRequire' =>$timekeep_imageRequire,
+            'shop_id' =>$shop_id
+        ];
+
+        $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
+        $timekeepConfigList[]=$timekeepConfig;
         //Fake user
         $userListName= ['Gia Bảo','Tô Bảo','Hoàng Ca','Mai Chung','Đỗ Cường','Thái Dương','Ngọc Đại','Hồng Đạo','Tiến Đạt','Hồng Điệp','Văn Đức',
         'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Tấn Huy','Phú Huy','Đăng Huy',
@@ -163,6 +207,7 @@ class DepController extends Controller
             $random_keys=array_rand($depList);
             $dep_id = $depList[$random_keys]["_id"];
             $branch_id =$depList[$random_keys]["branch_id"];
+            $basic_salary = rand(5000000,14000000);
             $userAttributes = [
                 'name' => $userListName[$i],
                 'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
@@ -172,6 +217,8 @@ class DepController extends Controller
                 'dep_id' => $dep_id,
                 'is_root' => 1,
                 'phone_number' => (string)($i+1),
+                'timekeep_config' =>$timekeepConfigList[0],
+                'basic_salary' => $basic_salary,
                 'shop_id' => $shop_id,
                 'sex' => '1',
                 'birth' => '1999-11-07',
@@ -248,24 +295,27 @@ class DepController extends Controller
                 }
             }
         }
-        //Fake Wifi
-        $listNameWife =['Wifi Company','Wifi School'];
-        $listSsid =['My Company','My School'];
-        for ($i=0; $i <2 ; $i++) { 
-            $random_keys=array_rand($depList);
-            $dep_id = $depList[$random_keys]["_id"];
-            $branch_id =$depList[$random_keys]["branch_id"];
-            $attributes = [
-                'name' => $listNameWife[$i],
-                'bssid' => '44:fb:5a:91:d5:7a',
-                'ssid' => $listSsid[$i],
-                'branch_id' => $branch_id,
-                'dep_id' => $dep_id,
-                'shop_id' => $shop_id
-            ];
-            $wifi = $this->wifiConfigRepository->create($attributes);
-            $wifiList[]=$wifi;
-        }
+        //Fake Wifi bỏ phần này
+       // $listNameWife =['Wifi Company','Wifi School'];
+        //$listSsid =['My Company','My School'];
+       // for ($i=0; $i <2 ; $i++) { 
+            //$random_keys=array_rand($depList);
+           // $dep_id = $depList[$random_keys]["_id"];
+           // $branch_id =$depList[$random_keys]["branch_id"];
+           // $attributes = [
+                //'name' => $listNameWife[$i],
+               // 'bssid' => '44:fb:5a:91:d5:7a',
+               // 'ssid' => $listSsid[$i],
+               // 'branch_id' => $branch_id,
+               // 'dep_id' => $dep_id,
+               // 'shop_id' => $shop_id
+            //];
+           // $wifi = $this->wifiConfigRepository->create($attributes);
+            //$wifiList[]=$wifi;
+       //}
+
+
+
         //Fake EmpClock ca sáng
         //shift_id ca sáng
         $shift_id = $shiftList[0]["_id"];
@@ -283,8 +333,8 @@ class DepController extends Controller
                     $user_name =$user['name'];
                     $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id)->where('working_date','<=',$day)->get();
                     //Các biến random
-                    $late_check_in = rand(1,1800);
-                    $soon_check_out = rand(1,1800);
+                    $late_check_in = rand(1,900);
+                    $soon_check_out = rand(1,900);
                     $real_working_hours =14400- ($late_check_in +  $soon_check_out );
                     
                     $i = count($emp_shift,COUNT_NORMAL);
@@ -303,7 +353,7 @@ class DepController extends Controller
                         'shift_id' => $shift_id,
                         'time_check' => $time_check,
                         'status' => 1,
-                        'device_network_infor' => $wifiList[0],
+                        'timekeep_config' => $timekeepConfigList[0],
                         'type' => 'check_in'
                     ];
                     $emp_history = $this->historyRepository->create($data);
@@ -365,8 +415,8 @@ class DepController extends Controller
                     $user_name =$user['name'];
                     $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id1)->where('working_date','<=',$day)->get();
                     //Các biến random
-                    $late_check_in = rand(1,1800);
-                    $soon_check_out = rand(1,1800);
+                    $late_check_in = rand(1,900);
+                    $soon_check_out = rand(1,900);
                     $real_working_hours =14400- ($late_check_in +  $soon_check_out );
 
                     $i = count($emp_shift,COUNT_NORMAL);
@@ -384,7 +434,7 @@ class DepController extends Controller
                         'shift_id' => $shift_id1,
                         'time_check' => $time_check,
                         'status' => 1,
-                        'device_network_infor' => $wifiList[0],
+                        'timekeep_config' => $timekeepConfigList[0],
                         'type' => 'check_in'
                     ];
                     $emp_history = $this->historyRepository->create($data);
