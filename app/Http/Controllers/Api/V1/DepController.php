@@ -118,7 +118,6 @@ class DepController extends Controller
         $shiftList =[];
         $empShiftList =[];
         $wifiList = [];
-        $timekeepConfigList =[];
          //Fake shop 
          // Tạo shop trước
         $attributesShop = [
@@ -195,7 +194,8 @@ class DepController extends Controller
         ];
 
         $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
-        $timekeepConfigList[]=$timekeepConfig;
+        $timekeepConfigList = $timekeepConfig->transform();
+
         //Fake user
         $userListName= ['Gia Bảo','Tô Bảo','Hoàng Ca','Mai Chung','Đỗ Cường','Thái Dương','Ngọc Đại','Hồng Đạo','Tiến Đạt','Hồng Điệp','Văn Đức',
         'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Tấn Huy','Phú Huy','Đăng Huy',
@@ -217,7 +217,7 @@ class DepController extends Controller
                 'dep_id' => $dep_id,
                 'is_root' => 1,
                 'phone_number' => (string)($i+1),
-                'timekeep_config' =>$timekeepConfigList[0],
+                'timekeep_config' =>$timekeepConfigList,
                 'basic_salary' => $basic_salary,
                 'shop_id' => $shop_id,
                 'sex' => '1',
@@ -353,7 +353,7 @@ class DepController extends Controller
                         'shift_id' => $shift_id,
                         'time_check' => $time_check,
                         'status' => 1,
-                        'timekeep_config' => $timekeepConfigList[0],
+                        'timekeep_config' => $timekeepConfigList,
                         'type' => 'check_in'
                     ];
                     $emp_history = $this->historyRepository->create($data);
@@ -434,7 +434,7 @@ class DepController extends Controller
                         'shift_id' => $shift_id1,
                         'time_check' => $time_check,
                         'status' => 1,
-                        'timekeep_config' => $timekeepConfigList[0],
+                        'timekeep_config' => $timekeepConfigList,
                         'type' => 'check_in'
                     ];
                     $emp_history = $this->historyRepository->create($data);
