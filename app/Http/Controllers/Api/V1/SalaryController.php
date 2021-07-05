@@ -80,7 +80,6 @@ class SalaryController extends Controller
                 $list_user[] = $user->transform();
             }
         }
-        $dem =null;
         for ($i = 0; $i < count($list_user, COUNT_NORMAL); $i++) {
             $user_id = ($list_user[$i]["id"]);
             //Chọn ngày đầu tháng và cuối tháng cần tính lương
@@ -120,6 +119,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read);
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
@@ -135,6 +135,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-100000;    
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
@@ -150,6 +151,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-200000;    
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
@@ -165,6 +167,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-300000;    
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
@@ -180,6 +183,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-400000;    
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
@@ -196,6 +200,7 @@ class SalaryController extends Controller
                
                 $data = [
                     'user_id' => $user_id,
+                    'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
