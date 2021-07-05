@@ -28,15 +28,15 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
             'as' => 'salary.view',
             'uses' => 'SalaryController@viewSalary',
         ]);
-        $api->get('salary/statistics', [
+        $api->post('salary/statistics', [
             'as' => 'salary.view',
             'uses' => 'SalaryController@viewTimeStatistics',
         ]);
-        $api->get('salary/statistics1', [
+        $api->post('salary/statistics1', [
             'as' => 'salary.view',
             'uses' => 'SalaryController@viewWhoIsWorking',
         ]);
-        $api->get('salary/statistics2', [
+        $api->post('salary/statistics2', [
             'as' => 'salary.view',
             'uses' => 'SalaryController@viewSalaryFund',
         ]);
