@@ -40,29 +40,63 @@ class PositionController extends Controller
     {
         $validator = \Validator::make($this->request->all(), [
             'position_name' => 'required',
-            'shop_id' => 'required',
-            'permission' => 'required',
         ]);
+        $shop_id = $this->user()->shop_id;
         if ($validator->fails()) {
             return $this->errorBadRequest($validator->messages()->toArray());
         }
-        $shop = Shop::where(['_id' => mongo_id($this->request->get('shop_id'))])->first();
-        $positioncheck = Position::where(['position_name' => strtolower($this->request->get('position_name'))])->first();
+        $shop = Shop::where(['_id' => $shop_id])->first();
+        $position_name = $this->request->get('position_name');
+        $positioncheck = Position::where('shop_id','=',$shop_id)->where('position_name','=',$position_name)->first();
         if (empty($shop)) {
             return $this->errorBadRequest(trans('Chưa có Shop'));
-        } else {
-            if (!empty($positioncheck))
-                return $this->errorBadRequest('Trùng position');
+        }
+        if (!(empty($positioncheck))){
+            return $this->errorBadRequest('Trùng position');
         }
         $attribute = [
-            'shop_id' => mongo_id($shop->_id),
+            'shop_id' => $shop_id,
             'position_name' => $this->request->get('position_name'),
-            'permission' => (int)$this->request->get('permission'),
         ];
         $position = $this->positionRepository->create($attribute);
         $data = $position->transform();
         return $this->successRequest($data);
     }
+    public function editPosition()
+    {
+        // Validate Data import.
+        $validator = \Validator::make($this->request->all(), [
+            'id' => 'required',
+            'position_name' => 'required',
+        ]);
+      
+        if ($validator->fails()) {
+            return $this->errorBadRequest($validator->messages()->toArray());
+        }
+        $shop_id = $this->user()->shop_id;
+        $id = $this->request->get('id');
+        // Kiểm tra xem Position đã được đăng ký trước đó chưa
+        $idCheck = Position::where(['_id' => $id])->first();
+        if (empty($idCheck)) {
+            return $this->errorBadRequest(trans('Position không tồn tại'));
+        }
+        $position_name = $this->request->get('position_name');
+        $positioncheck = Position::where('shop_id','=',$shop_id)->where('position_name','=',$position_name)->first();
+
+        if (!(empty($positioncheck))){
+            return $this->errorBadRequest('Trùng position');
+        }
+        $attribute = [
+            'shop_id' => $shop_id,
+            'position_name' => $this->request->get('position_name'),
+        ];
+        $position = $this->positionRepository->update($attribute, $id);
+
+        return $this->successRequest($position->transform());
+
+    }
+
+
     public function deletePosition()
     {
         $id = $this->request->get('id');

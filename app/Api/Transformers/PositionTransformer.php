@@ -20,9 +20,9 @@ class PositionTransformer extends TransformerAbstract
     public function transform(Position $model)
     {
         $data= [
-            'id'         => $model->_id,
+            'id' => $model->_id,
             'position_name'  =>$model->position_name,
-            'permission'=>$model->permission,
+            //'permission'=>$model->permission,
             'shop'=>[],
         ];
         $shop=$model->shop();

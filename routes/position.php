@@ -9,6 +9,10 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
             'as' => 'position.register',
             'uses' => 'PositionController@createPosition',
         ]);
+        $api->post('position/update', [
+            'as' => 'position.register',
+            'uses' => 'PositionController@editPosition',
+        ]);
         $api->get('position/delete', [
             'as' => 'position.delete',
             'uses' => 'PositionController@deletePosition',
