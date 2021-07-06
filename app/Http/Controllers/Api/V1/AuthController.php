@@ -93,6 +93,8 @@ class AuthController extends Controller
                 $token = $this->auth->fromUser($user);
                 $userTrans = $user->transform();
                 return $this->successRequest(['token' => $token, 'user' => $userTrans]);
+            }else{
+                return $this->errorBadRequest("Số điện thoại không đúng!");
             }
         }
         return $this->errorBadRequest("Công ty hoặc sđt chưa được khởi tạo");
