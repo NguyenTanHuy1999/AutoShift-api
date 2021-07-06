@@ -181,7 +181,6 @@ class TimekeepConfigController extends Controller
     {
         $user = $this->user();
         $timekeppConfig_list = TimekeepConfig::where(['shop_id' => $user->shop_id])->get();
-        djson($timekeppConfig_list);
         $data = [];
         foreach ($timekeppConfig_list as $timekeep) {
             $data[] = $timekeep->transform();

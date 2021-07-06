@@ -49,7 +49,216 @@ class UserController extends Controller
         parent::__construct();
     }
 
+
     public function createUser()
+    {
+        if ($this->request->isMethod('POST')) {
+            $validator = \Validator::make($this->request->all(), [
+                'name' => 'required',
+                'position_id' => 'nullable',
+                'email' => 'nullable',
+                'dep_id' => 'nullable',
+                'phone_number' => 'required',
+                'basic_salary' => 'required',
+                'sex' => 'nullable',
+            ]);
+            if ($validator->fails()) {
+                return $this->errorBadRequest($validator->messages()->toArray());
+            }
+            if ($this->request->hasFile('avatar')) {
+                $avatar_file = $this->request->file('avatar');
+                $avatar_url=  uploadImage($avatar_file);
+                $email = strtolower($this->request->get('email'));
+                $basic_salary = $this->request->get('basic_salary');
+                $userAttributes = [
+                    'name' => $this->request->get('name'),
+                    'avatar' => $avatar_url,
+                    'email' => $email,
+                    'position_id' => mongo_id($this->request->get('position_id')),
+                    'dep_id' => mongo_id($this->request->get('dep_id')),
+                    'is_root' => 0,
+                    'phone_number' => $this->request->get('phone_number'),
+                    'basic_salary' => $basic_salary,
+                    'shop_id' => $this->user()->shop_id,
+                    'sex' => $this->request->get('sex'),
+                    'birth' => $this->request->get('birth'),
+                ];
+                $user = $this->userRepository->create($userAttributes);
+                return $this->successRequest($user->transform());
+            }
+            else{
+                return $this->errorBadRequest(trans('Lỗi về chọn avatar'));
+            }
+        }
+    }    
+
+
+    //Get detail user current
+    public function userShow()
+    {
+        $user = $this->user();
+        $data = $user->transform('with-shop');
+
+        //Save history login
+        $date = Carbon::now();
+        $user->visited_date = $date;
+        $user->vistied_ip = get_client_ip();
+        $user->save();
+        return $this->successRequest($data);
+    }
+
+    public function list()
+    {
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+
+        $data = [];
+
+        $listUser = User::where(['shop_id' => $shop_id])->get();
+        if (!empty($listUser)) {
+            foreach ($listUser as $user) {
+                $data[] = $user->transform();
+            }
+        }
+        return $this->successRequest($data);
+    }
+
+    /**
+     * @api {post}/user/update 2. update my info
+     * @apiDescription Update my info
+     * @apiGroup user
+     * @apiPermission JWT
+     * @apiVersion 0.1.0
+     * @apiParam {String} [name] name
+     * @apiParam {String} [email] name
+     * @apiParam {Object} [company] company[phone], company[address]...
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+                "error_code": 0,
+                "message": [
+                    "Successfully"
+                ],
+                "data": {
+                    "id": "p5jFuwDbo84KteeCc",
+                    "name": "Trung Hà",
+                    "username": "+84909224002",
+                    "phone": "+84909224002",
+                    "phone_code": "84",
+                    "company": {
+                        "phone": "0909090909",
+                        "address": "Bùi Hữu Nghĩa, Bình Thạnh"
+                    },
+                    "is_supplier": 0
+                }
+            }
+     */
+    public function update()
+    {
+        $user = $this->userRepository->find($this->request->get('id'));
+        if ($this->request->isMethod('POST')) {
+            $validator = \Validator::make($this->request->all(), [
+                'name' => 'required',
+                'position_id' => 'nullable',
+                'email' => 'nullable',
+                'dep_id' => 'nullable',
+                'phone_number' => 'required',
+                'basic_salary' => 'required',
+                'sex' => 'nullable',
+            ]);
+            if ($validator->fails()) {
+                return $this->errorBadRequest($validator->messages()->toArray());
+            }
+            if ($this->request->hasFile('avatar')) {
+                $avatar_file = $this->request->file('avatar');
+                $avatar_url=  uploadImage($avatar_file);
+                $email = strtolower($this->request->get('email'));
+                $basic_salary = $this->request->get('basic_salary');
+                $userAttributes = [
+                    'name' => $this->request->get('name'),
+                    'avatar' => $avatar_url,
+                    'email' => $email,
+                    'position_id' => mongo_id($this->request->get('position_id')),
+                    'dep_id' => mongo_id($this->request->get('dep_id')),
+                    'is_root' => 0,
+                    'phone_number' => $this->request->get('phone_number'),
+                    'basic_salary' => $basic_salary,
+                    'shop_id' => $this->user()->shop_id,
+                    'sex' => $this->request->get('sex'),
+                    'birth' => $this->request->get('birth'),
+                ];
+                $user = $this->userRepository->update($userAttributes, $user->_id);
+                return $this->successRequest($user->transform());
+            }
+            else{
+                return $this->errorBadRequest(trans('Lỗi về chọn avatar'));
+            }
+        }
+    }
+
+    /**
+     * @api {GET} /user/info/{username} 3. User Info
+     * @apiDescription Get user info
+     * @apiGroup user
+     * @apiPermission JWT
+     * @apiVersion 0.1.0
+     * @apiParam {String} username  username's user
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *      "error_code": 0,
+                "message": [
+                    "Successfully"
+                ],
+                "data": [
+                    {
+                        "id": "oGpZf8tSv3FNLHZv4",
+                        "name": "saritvn",
+                        "username": "saritvn",
+                        "phone": "0909224002",
+                        "phone_code": "84",
+                        "company": {
+                            "name": "Green Mobile App",
+                            "address": "195 Dien Bien Phu, Ward 15, Binh Thanh Distric, Ho Chi Minh City",
+                            "email": "trung.ha@greenapp.vn",
+                            "phone": "0909224002",
+                            "field": "Mobile App"
+                        }
+                    }
+                ]
+     *     }
+     */
+
+    public function info(Request $request, $username)
+    {
+        // Validate HEADER import.
+        // $validator = \Validator::make($request->all(), [
+        //     'username'   => 'required',
+        // ]);
+        // if ($validator->fails()) {
+        //     return $this->errorBadRequest($validator->messages()->toArray());
+        // }
+
+        $user = $this->userRepository->findByField('username', $username)->first();
+        if (empty($user)) {
+            return $this->successRequest([]);
+        }
+        $data = $user->transform();
+        return $this->successRequest($data);
+    }
+    public function deleteUser($id)
+    {
+        $id = $this->request->get('id');
+        try {
+            $delete_user = User::where('_id', $id)->delete();
+        } catch (\Exception $e) {
+            return $this->errorBadRequest($e->messages()->toArray());
+        }
+        return $this->successRequest('Đã xóa thành công');
+    }
+
+
+    public function createUser1()
     {
         if ($this->request->isMethod('POST')) {
             $validator = \Validator::make($this->request->all(), [
@@ -143,160 +352,6 @@ class UserController extends Controller
     //     $token = $this->auth->fromUser($user);
     //     return $this->successRequest($token);
     // }
-
-
-    //Get detail user current
-    public function userShow()
-    {
-        $user = $this->user();
-        $data = $user->transform('with-shop');
-
-        //Save history login
-        $date = Carbon::now();
-        $user->visited_date = $date;
-        $user->vistied_ip = get_client_ip();
-        $user->save();
-        return $this->successRequest($data);
-    }
-
-    public function list()
-    {
-        $user = $this->user();
-        $shop_id = $user->shop_id;
-
-        $data = [];
-
-        $listUser = User::where(['shop_id' => $shop_id])->get();
-        if (!empty($listUser)) {
-            foreach ($listUser as $user) {
-                $data[] = $user->transform();
-            }
-        }
-        return $this->successRequest($data);
-    }
-
-    /**
-     * @api {post}/user/update 2. update my info
-     * @apiDescription Update my info
-     * @apiGroup user
-     * @apiPermission JWT
-     * @apiVersion 0.1.0
-     * @apiParam {String} [name] name
-     * @apiParam {String} [email] name
-     * @apiParam {Object} [company] company[phone], company[address]...
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {
-                "error_code": 0,
-                "message": [
-                    "Successfully"
-                ],
-                "data": {
-                    "id": "p5jFuwDbo84KteeCc",
-                    "name": "Trung Hà",
-                    "username": "+84909224002",
-                    "phone": "+84909224002",
-                    "phone_code": "84",
-                    "company": {
-                        "phone": "0909090909",
-                        "address": "Bùi Hữu Nghĩa, Bình Thạnh"
-                    },
-                    "is_supplier": 0
-                }
-            }
-     */
-    public function update()
-    {
-        $user = $this->userRepository->find($this->request->get('id'));
-        if ($this->request->isMethod('POST')) {
-            $validator = \Validator::make($this->request->all(), [
-                'name' => 'required',
-                'position_id' => 'nullable',
-                'email' => 'nullable',
-                'dep_id' => 'nullable',
-                'branch_id' => 'nullable',
-                'phone_number' => 'nullable',
-                'sex' => 'nullable',
-            ]);
-            if ($validator->fails()) {
-                return $this->errorBadRequest($validator->messages()->toArray());
-            }
-            $email = strtolower($this->request->get('email'));
-            $userAttributes = [
-                'name' => $this->request->get('name'),
-                'email' => $email,
-                'position_id' => mongo_id($this->request->get('position_id')),
-                'branch_id' => mongo_id($this->request->get('branch_id')),
-                'dep_id' => mongo_id($this->request->get('dep_id')),
-                'is_root' => $this->request->get('is_root'),
-                'phone_number' => $this->request->get('phone_number'),
-                'birth' => $this->request->get('birth'),
-                'sex' => $this->request->get('sex')
-            ];
-            $user = $this->userRepository->update($userAttributes, $user->_id);
-            return $this->successRequest($user->transform());
-        }
-        return $this->successRequest($user->transform());
-    }
-
-    /**
-     * @api {GET} /user/info/{username} 3. User Info
-     * @apiDescription Get user info
-     * @apiGroup user
-     * @apiPermission JWT
-     * @apiVersion 0.1.0
-     * @apiParam {String} username  username's user
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {
-     *      "error_code": 0,
-                "message": [
-                    "Successfully"
-                ],
-                "data": [
-                    {
-                        "id": "oGpZf8tSv3FNLHZv4",
-                        "name": "saritvn",
-                        "username": "saritvn",
-                        "phone": "0909224002",
-                        "phone_code": "84",
-                        "company": {
-                            "name": "Green Mobile App",
-                            "address": "195 Dien Bien Phu, Ward 15, Binh Thanh Distric, Ho Chi Minh City",
-                            "email": "trung.ha@greenapp.vn",
-                            "phone": "0909224002",
-                            "field": "Mobile App"
-                        }
-                    }
-                ]
-     *     }
-     */
-
-    public function info(Request $request, $username)
-    {
-        // Validate HEADER import.
-        // $validator = \Validator::make($request->all(), [
-        //     'username'   => 'required',
-        // ]);
-        // if ($validator->fails()) {
-        //     return $this->errorBadRequest($validator->messages()->toArray());
-        // }
-
-        $user = $this->userRepository->findByField('username', $username)->first();
-        if (empty($user)) {
-            return $this->successRequest([]);
-        }
-        $data = $user->transform();
-        return $this->successRequest($data);
-    }
-    public function deleteUser($id)
-    {
-        $id = $this->request->get('id');
-        try {
-            $delete_user = User::where('_id', $id)->delete();
-        } catch (\Exception $e) {
-            return $this->errorBadRequest($e->messages()->toArray());
-        }
-        return $this->successRequest('Đã xóa thành công');
-    }
 }
+
+

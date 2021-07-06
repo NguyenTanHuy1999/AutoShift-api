@@ -92,13 +92,13 @@ class ShopController extends Controller
 
         // Sau đó tạo user
         $userAttributes = [
-            'full_name' => $this->request->get('full_name'),
             'email' => $email,
             'is_web' => (int)($this->request->get('is_web')),
             'shop_id' => mongo_id($shop->_id),
             'position_id' => null,
-            'branch_id' => null,
+            //'branch_id' => null,
             'dep_id' => null,
+            'basic_salary' =>null,
             'is_root' => 1,
             'sex' => null,
             'name' => 'admin',
