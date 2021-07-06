@@ -12,6 +12,7 @@ use App\Api\Repositories\Contracts\WifiConfigRepository;
 use App\Api\Repositories\Contracts\HistoryRepository;
 use App\Api\Repositories\Contracts\EmpClockRepository;
 use App\Api\Repositories\Contracts\TimekeepConfigRepository;
+use App\Api\Repositories\Contracts\PositionRepository;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\V1\PositionController;
@@ -55,6 +56,7 @@ class DepController extends Controller
     protected $historyRepository;
     protected $empclockRepository;
     protected $timekeepConfigRepository;
+    protected $positionRepository;
 
     /**
      * @var ShopRepository
@@ -70,6 +72,7 @@ class DepController extends Controller
         WifiConfigRepository $wifiConfigRepository,
         EmpClockRepository $empClockRepository,
         DepRepository $depRepository,
+        PositionRepository $positionRepository,
         UserRepository $userRepository,
         ShopRepository $shopRepository,
         ShiftRepository $shiftRepository,
@@ -89,6 +92,7 @@ class DepController extends Controller
         $this->historyRepository = $historyRepository;
         $this->empclockRepository = $empClockRepository;
         $this->timekeepConfigRepository = $timekeepConfigRepository;
+        $this->positionRepository = $positionRepository;
         $this->request = $request;
         $this->auth = $auth;
         parent::__construct();
@@ -114,49 +118,85 @@ class DepController extends Controller
      {
         $depList = [];
         $userList = [];
-        $branchList =[];
+        $positionList =[];
+        //$branchList =[];
         $shiftList =[];
         $empShiftList =[];
         $wifiList = [];
          //Fake shop 
          // Tạo shop trước
         $attributesShop = [
-            'name' => 'DUYKHANH',
+            'name' => 'TANHUY',
             'shop_name' => $this->request->get('shop_name'),
             'email' => $this->request->get('name'),
         ];
         $shop = $this->shopRepository->create($attributesShop);
         //Shop_id
         $shop_id = $shop['_id'];
-        //Fake branch
-        $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
-        for ($i=0; $i <3; $i++) { 
-            $random_keys=array_rand($branchListName);
-            $attributesDep = [
-                'name' => $branchListName[$random_keys],
-                'address' => 'Long An',
-                'shop_id' => $shop_id,
-                'note' => $this->request->get('note'),
-            ];
-            $branch = $this->branchRepository->create($attributesDep);
-            $branchList[]=$branch;
-        }
-        //Fake dep
-        $depListName = [ 'IT ' ,'HR','OJI','SE','Marketing','Accounting','Human Resource','Financial','Pulic Relations','Training','Sales'];
 
-        for ($i=0; $i <4 ; $i++) { 
-            $random_keys=array_rand($depListName);
-            $random_keys1=array_rand($branchList);
-            $branch_id = $branchList[$random_keys1]["_id"];
+        //User Admin
+
+        $admin_info = [
+            'name' => $shop['name'],
+            'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
+            'email' => null,
+            'position_id' => null,
+            //'branch_id' => $branch_id,
+            'dep_id' => null,
+            'is_root' => 1,
+            'phone_number' => (string)1,
+            //'timekeep_config' =>$timekeepConfigList,
+            'basic_salary' =>10000000,
+            'shop_id' => $shop_id,
+            'sex' => '1',
+            'birth' => '1999-11-07',
+        ];
+        $user = $this->userRepository->create($admin_info);
+        $users = $user->transform();
+        $userList[]=$users;
+        
+        //Fake branch bỏ branch
+       // $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
+        //for ($i=0; $i <3; $i++) { 
+        //    $random_keys=array_rand($branchListName);
+        //    $attributesDep = [
+        //        'name' => $branchListName[$random_keys],
+        //        'address' => 'Long An',
+        //        'shop_id' => $shop_id,
+       //         'note' => $this->request->get('note'),
+       //     ];
+       //     $branch = $this->branchRepository->create($attributesDep);
+       //     $branchList[]=$branch;
+       // }
+        //Fake dep
+        $depListName = [ 'Accountant','Human Resource','Financial','Technical ','Business'];
+
+        for ($i=0; $i <5 ; $i++) { 
+           // $random_keys1=array_rand($branchList);
+           // $branch_id = $branchList[$random_keys1]["_id"];
             $attributes = [
-                'name' => $depListName[$random_keys],
-                'branch_id' => $branch_id,
+                'name' => $depListName[$i],
+                //'branch_id' => $branch_id,
                 'shop_id' => $shop_id,
                 'note' => $this->request->get('note')
             ];
             $dep = $this->depRepository->create($attributes);
             $depList[]= $dep;
         }
+
+        //Fake position
+        $position_name = [ 'Accountanting manager','Human resources manager','Finance manager','Technical manager','Business manager'];
+
+        for ($i=0; $i <5 ; $i++) { 
+          
+            $attributes = [
+                'shop_id' => $shop_id,
+                'position_name' => $position_name[$i],
+            ];
+            $position = $this->positionRepository->create($attributes);
+            $positionList[]= $position;
+        }
+
         //Fake timekeep_config
         $timekeep_name = 'Home';
         $timekeep_ssid = 'My Huyen';
@@ -179,12 +219,12 @@ class DepController extends Controller
         ];
 
 
-        $timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
+        //$timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
 
 
-        if (!empty($timekeeConfigCheck)) {
-            return $this->errorBadRequest('Timekeep_config đã được sử dụng');
-        }
+        //if (!empty($timekeeConfigCheck)) {
+        //    return $this->errorBadRequest('Timekeep_config đã được sử dụng');
+        //}
         $attributes = [
             'name' => $timekeep_name,
             'wifi' =>$wifi,
@@ -198,7 +238,7 @@ class DepController extends Controller
 
         //Fake user
         $userListName= ['Gia Bảo','Tô Bảo','Hoàng Ca','Mai Chung','Đỗ Cường','Thái Dương','Ngọc Đại','Hồng Đạo','Tiến Đạt','Hồng Điệp','Văn Đức',
-        'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Tấn Huy','Phú Huy','Đăng Huy',
+        'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Phú Huy','Đăng Huy',
         'Huy Hùng','Ngọc Hưng','Đức Khang','Tường Khải','Cơ Khánh','Toàn Khoa','Đăng Khoa','Đình Khôi','Trung Kiên','Thanh Lâm','Hải Long',
         'Tuyên Long','Quang Minh','Phuong Nam','Trọng Ngôn','Kiều Oanh','Trần Phú','Minh Phú','Đăng Quang','Nhật Quang','Quang Quyền','Đình Sơn',
         'Phúc Sơn','Thiện Tâm','Hồng Thái','Huy Thắng','Văn Thắng','Hoàng Thi','Hưng Thịnh','Minh Thu','Thị Thư','Trung Thường','Hưng Tiến','Quang Tịnh','Văn Triều',
@@ -206,25 +246,26 @@ class DepController extends Controller
         for ($i=0; $i <count($userListName,COUNT_NORMAL) ; $i++) { 
             $random_keys=array_rand($depList);
             $dep_id = $depList[$random_keys]["_id"];
-            $branch_id =$depList[$random_keys]["branch_id"];
+            $positionList_id =$positionList[$random_keys]["_id"];
             $basic_salary = rand(5000000,14000000);
             $userAttributes = [
                 'name' => $userListName[$i],
                 'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
                 'email' => 'admin@gmail.com',
-                'position_id' => null,
-                'branch_id' => $branch_id,
+                'position_id' => $positionList_id,
+                //'branch_id' => $branch_id,
                 'dep_id' => $dep_id,
-                'is_root' => 1,
-                'phone_number' => (string)($i+1),
-                'timekeep_config' =>$timekeepConfigList,
+                'is_root' => 0,
+                'phone_number' => (string)($i+2),
+                //'timekeep_config' =>$timekeepConfigList,
                 'basic_salary' => $basic_salary,
                 'shop_id' => $shop_id,
                 'sex' => '1',
                 'birth' => '1999-11-07',
             ];
             $user = $this->userRepository->create($userAttributes);
-            $userList[]=$user;
+            $users = $user->transform();
+            $userList[]=$users;
         }
         //Fake Shift
         // Tạo ca lớn
@@ -241,15 +282,15 @@ class DepController extends Controller
             false
         ];
         for ($i=0; $i <2 ; $i++) { 
-            $random_keys=array_rand($depList);
-            $dep_id = $depList[$random_keys]["_id"];
-            $random_keys1=array_rand($branchList);
-            $branch_id = $branchList[$random_keys1]["_id"];
+            //$random_keys=array_rand($depList);
+            //$dep_id = $depList[$random_keys]["_id"];
+            //$random_keys1=array_rand($branchList);
+            //$branch_id = $branchList[$random_keys1]["_id"];
             $attributes = [
                 'name' => $shiftListName[$i],
                 'shop_id' => $shop_id,
-                'branch_ids' => $branch_id,
-                'dep_ids' => $dep_id,
+               // 'branch_ids' => $branch_id,
+                //'dep_ids' => $dep_id,
                 'time_begin' => $listTimeBegin[$i],
                 'time_end' => $listTimeEnd[$i],
                 'shift_key' => $shiftListName[$i],
@@ -267,7 +308,7 @@ class DepController extends Controller
             foreach ($userList as $user) {
                 foreach ($work_date as $day) {
                     $dayOfWeek = $day->dayOfWeek;
-                    $user_id = $user['_id'];
+                    $user_id = $user['id'];
                     $weekMap = [
                         0 => 'SUN',
                         1 => 'MON',
@@ -329,7 +370,7 @@ class DepController extends Controller
                 $dayOfWeek = $day->dayOfWeek;
                 if ($assignments[$dayOfWeek]) {
                     $time_check = $day->addHour(7)->addMinute(55)->addMinutes(rand(1,20));
-                    $user_id = $user['_id'];
+                    $user_id = $user['id'];
                     $user_name =$user['name'];
                     $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id)->where('working_date','<=',$day)->get();
                     //Các biến random
@@ -411,7 +452,7 @@ class DepController extends Controller
                 if ($assignments[$dayOfWeek]) {
                     $time_check = $day->addHours(13)->addMinute(25)->addMinutes(rand(1,20));
                     //dd($time_check);
-                    $user_id = $user['_id'];
+                    $user_id = $user['id'];
                     $user_name =$user['name'];
                     $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id1)->where('working_date','<=',$day)->get();
                     //Các biến random
@@ -480,6 +521,7 @@ class DepController extends Controller
                 }
             }
         }
+        return $this->successRequest('Fake dữ liệu thành công!!');
        
     }//end Fake data
 
