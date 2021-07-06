@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use Carbon\Carbon;
 use App\Api\Repositories\Contracts\EmpClockRepository;
+use App\Api\Repositories\Contracts\TimekeepConfigRepository;
 use App\Api\Repositories\Contracts\SalaryRepository;
 use App\Api\Repositories\Contracts\HistoryRepository;
 
@@ -18,6 +19,7 @@ use App\Api\Entities\EmpClock;
 use App\Api\Entities\Empshift;
 use App\Api\Entities\Shift;
 use App\Api\Entities\WifiConfig;
+use App\Api\Entities\TimekeepConfig;
 //Google firebase
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
@@ -25,7 +27,7 @@ use Kreait\Firebase\ServiceAccount;
 class EmpClockController extends Controller
 {
     protected $empshiftRepository;
-
+    protected $timekeepConfigRepository;
     protected $userRepository;
     protected $empclockRepository;
     protected $salaryRepository;
@@ -39,12 +41,14 @@ class EmpClockController extends Controller
         AuthManager $auth,
         Request $request,
         EmpClockRepository $empClockRepository,
+        TimekeepConfigRepository $timekeepConfigRepository,
         SalaryRepository $salaryRepository,
         HistoryRepository $historyRepository
     ) {
         $this->request = $request;
         $this->auth = $auth;
         $this->empclockRepository = $empClockRepository;
+        $this->timekeepConfigRepository = $timekeepConfigRepository;
         $this->salaryRepository = $salaryRepository;
         $this->historyRepository = $historyRepository;
         parent::__construct();
@@ -57,7 +61,7 @@ class EmpClockController extends Controller
         $user_id = $user->id;
         $branch_id = $user->branch_id;
         $dep_id = $user->dep_id;
-        $timekeep_config_client = $this->request->get('timekeep_config');
+       
         //Lấy ca của user trong ngày
         $from  = Carbon::now()
             ->startOfDay()        // 2018-09-29 00:00:00.000000
@@ -86,42 +90,40 @@ class EmpClockController extends Controller
        //     }
        // }
         
-       
-       //lấy thông tin timekeep_config của user
-        $user_timekeepConfig = $user->timekeep_config;
-        $user_timekeepConfig_wifi = $user_timekeepConfig['wifi'];
-        $user_long = $user_timekeepConfig['location']['long'];
-        $user_lat = $user_timekeepConfig['location']['lat'];
+       //timkeep lấy từ client 
+        $timekeep_client = $this->request->get('timekeep');
+       //lấy thông tin timekeep_config từ database
+        $timekeep_config = TimekeepConfig::where('shop_id','=',$user->shop_id)->first();
+        $timekeep_config_db_wifi = $timekeep_config['wifi'];
+        $timekeep_config_db_long = $timekeep_config['location']['long'];
+        $timekeep_config_db_lat = $timekeep_config['location']['lat'];
 
         //thông tin timekeep_config từ client trả về 
-        $timekeep_config_client_wifi = $timekeep_config_client['wifi'];
-        $timekeep_config_client_long = $timekeep_config_client['location']['long'];
-        $timekeep_config_client_lat = $timekeep_config_client['location']['lat'];
+        $timekeep_client_wifi = $timekeep_client['wifi'];
+        $timekeep_client_long = $timekeep_client['location']['long'];
+        $timekeep_client_lat = $timekeep_client['location']['lat'];
 
         //xử lý validate timekeep_config
-        if($timekeep_config_client_wifi != $user_timekeepConfig_wifi){
+        if($timekeep_client_wifi != $timekeep_config_db_wifi){
             return $this->errorBadRequest('Wifi kết nối không phù hợp');
         }
         //khoảng cách từ điểm cố định đến điểm client trả về
-        $distance = sqrt(($timekeep_config_client_long*$timekeep_config_client_long - 2*$timekeep_config_client_long*$user_long + $user_long*$user_long) + 
-                        ($timekeep_config_client_lat*$timekeep_config_client_lat - 2*$timekeep_config_client_lat*$user_lat + $user_lat*$user_lat));
+        $distance = sqrt(($timekeep_client_long*$timekeep_client_long - 2*$timekeep_client_long*$timekeep_config_db_long + $timekeep_config_db_long*$timekeep_config_db_long) + 
+                        ($timekeep_client_lat*$timekeep_client_lat - 2*$timekeep_client_lat*$timekeep_config_db_lat + $timekeep_config_db_lat*$timekeep_config_db_lat));
 
         if($distance >0.001){
             return $this->errorBadRequest('Bạn đang ở quá xa vị trí chấm công');
         }
-        
-        $timekeep_config_clocking[] = $timekeep_config_client;
-        // dd($from, $to);
+
         $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
             ->where(['user_id' => $user_id])
             ->get();
 
         $data = [];
         foreach ($emp_shifts as $emp_shift) {
-
             $data[] = $emp_shift->transform();
         }
-        return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_config_clocking]);
+        return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
     }
 
 
