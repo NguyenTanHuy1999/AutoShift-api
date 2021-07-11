@@ -21,8 +21,7 @@ class DepTransformer extends TransformerAbstract
         $data = [
             'id'=>$model->_id,
             'name' => $model->name,
-            'note'=>$model->note,
-            'branch'=>[],
+            'note'=>$model->note
         ];
         $branch=$model->branch();
         if(!empty($branch)) {

@@ -144,11 +144,12 @@ class DepController extends Controller
             //'branch_id' => $branch_id,
             'dep_id' => null,
             'is_root' => 1,
+            'is_admin' =>1,
             'phone_number' => (string)1,
             //'timekeep_config' =>$timekeepConfigList,
             'basic_salary' =>10000000,
             'shop_id' => $shop_id,
-            'sex' => '1',
+            'sex' => 1,
             'birth' => '1999-11-07',
         ];
         $user = $this->userRepository->create($admin_info);
@@ -256,11 +257,12 @@ class DepController extends Controller
                 //'branch_id' => $branch_id,
                 'dep_id' => $dep_id,
                 'is_root' => 0,
+                'is_admin' =>rand(0,1),
                 'phone_number' => (string)($i+2),
                 //'timekeep_config' =>$timekeepConfigList,
                 'basic_salary' => $basic_salary,
                 'shop_id' => $shop_id,
-                'sex' => '1',
+                'sex' => 1,
                 'birth' => '1999-11-07',
             ];
             $user = $this->userRepository->create($userAttributes);
@@ -531,7 +533,7 @@ class DepController extends Controller
         $user = $this->user();
         // Validate Data import.
         $validator = \Validator::make($this->request->all(), [
-            'branch_id' => 'required',
+            //'branch_id' => 'required',
             'name' => 'required',
             'note' => 'nullable'
         ]);
@@ -540,21 +542,22 @@ class DepController extends Controller
         }
 
         $depname = $this->request->get('name');
-        $branchCheck = Branch::where(['_id' => mongo_id($this->request->get('branch_id')),])->first();
-        $depCheck = Dep::where(['name' => $depname, 'branch_id' => mongo_id($branchCheck->_id)])->first();
+        //$branchCheck = Branch::where(['_id' => mongo_id($this->request->get('branch_id')),])->first();
+        $depCheck = Dep::where(['name' => $depname])->first();
 
         // dd($depCheck->name);
-        if (empty($branchCheck)) {
-            return $this->errorBadRequest(trans('Chi nhánh không tồn tại'));
-        } else {
-            if (!empty($depCheck)) {
-                return $this->errorBadRequest(trans('Phòng ban đã tồn tại'));
-            }
+        //if (empty($branchCheck)) {
+        //    return $this->errorBadRequest(trans('Chi nhánh không tồn tại'));
+        //} else {
+        if (!empty($depCheck)) {
+            return $this->errorBadRequest(trans('Phòng ban đã tồn tại'));
+            
         }
+        //}
 
         $attributes = [
             'name' => $depname,
-            'branch_id' => mongo_id($branchCheck->_id),
+            //'branch_id' => mongo_id($branchCheck->_id),
             'shop_id' => mongo_id($branchCheck->shop_id),
             'note' => $this->request->get('note')
         ];
