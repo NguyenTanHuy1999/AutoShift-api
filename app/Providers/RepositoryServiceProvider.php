@@ -22,6 +22,7 @@ class RepositoryServiceProvider extends ServiceProvider
             'Salary',
             'History',
             'WifiConfig',
+            'General',
             'TimekeepConfig'
         );
 

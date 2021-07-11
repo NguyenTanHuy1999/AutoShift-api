@@ -188,6 +188,7 @@ $app->group(['namespace' => 'App\Http\Controllers'], function ($app) {
     require __DIR__ . '/../routes/history.php';
     require __DIR__ . '/../routes/configClock.php';
     require __DIR__ . '/../routes/timekeepConfig.php';
+    require __DIR__ . '/../routes/general.php';
 });
 
 return $app;
