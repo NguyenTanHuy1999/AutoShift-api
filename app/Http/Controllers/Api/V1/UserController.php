@@ -60,6 +60,7 @@ class UserController extends Controller
                 'dep_id' => 'nullable',
                 'phone_number' => 'required',
                 'basic_salary' => 'required',
+                'is_admin' => 'required',
                 'sex' => 'nullable',
             ]);
             if ($validator->fails()) {
@@ -77,6 +78,7 @@ class UserController extends Controller
                     'position_id' => mongo_id($this->request->get('position_id')),
                     'dep_id' => mongo_id($this->request->get('dep_id')),
                     'is_root' => 0,
+                    'is_admin' => $this->request->get('is_admin'),
                     'phone_number' => $this->request->get('phone_number'),
                     'basic_salary' => $basic_salary,
                     'shop_id' => $this->user()->shop_id,

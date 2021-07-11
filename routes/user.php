@@ -24,7 +24,11 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
             'as' => 'auth.login',
             'uses' => 'AuthController@login',
         ]);
-
+        //Login_web
+        $api->post('auth/login-web', [
+            'as' => 'auth.login',
+            'uses' => 'AuthController@loginWeb',
+        ]);
         //Get orgamization
         $api->get('auth/organization', [
             'as' => 'auth.organization',

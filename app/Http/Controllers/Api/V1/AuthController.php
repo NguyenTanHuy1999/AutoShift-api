@@ -99,4 +99,34 @@ class AuthController extends Controller
         }
         return $this->errorBadRequest("Công ty hoặc sđt chưa được khởi tạo");
     }
+    public function loginWeb(){
+        // Validate Data import.
+        $validator = \Validator::make($this->request->all(), [
+            'name' => 'required',
+            'phone_number' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorBadRequest($validator->messages()->toArray());
+        }
+
+        $shop = $this->shopRepository->findByField('name', $this->request->get('name'))->first();
+        if (!empty($shop)) {
+
+            // b2: kiem tra user co ton tai khong
+            $check_phone = $this->userRepository->where('phone_number','=',$this->request->get('phone_number'))->first();
+            if (!empty($check_phone)) {
+                $user = User::where('phone_number','=',$this->request->get('phone_number'))->where('is_admin','=',1)->first();
+                if(!empty($user)){
+                    $token = $this->auth->fromUser($user);
+                    $userTrans = $user->transform();
+                    return $this->successRequest(['token' => $token, 'user' => $userTrans]);
+                }else{
+                    return $this->errorBadRequest("Quyền hạn của bạn không phù hợp với tác vụ này");
+                }
+            }else{
+                return $this->errorBadRequest("Số điện thoại không đúng!");
+            }
+        }
+        return $this->errorBadRequest("Công ty hoặc sđt chưa được khởi tạo");
+    }
 }
