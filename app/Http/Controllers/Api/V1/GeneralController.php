@@ -243,6 +243,42 @@ class GeneralController extends Controller
         ];
         return $this->successRequest($data);
     }
+    //Thống kê danh sách đi muộn về sớm
+    public function statistical_late_soon()
+    {
+        //Chọn ngày cần xem thống kê
+        $date = Carbon::parse($this->request->get('date')); //Ngày client chọn
+        $working_date = $date->startOfDay();
+        $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
+        $list_late_soon = [];
+        foreach ($listCheckOut as $listChecks) {
+            if(($listChecks->late_check_in)>750){
+                $data_late_check_in = [
+                    'type' => 'late_check_in',
+                    'user_id' => $listChecks->user_id,
+                    'user_name' => $listChecks->user_name,
+                    'shift_id' => $listChecks->shift_id,
+                    'shift_name' => $listChecks->shift_name,
+                    'shift_time' => $listChecks->shift_time,
+                    'late_check_in' => $listChecks->late_check_in
+                ];
+                $list_late_soon[]=$data_late_check_in;
+            }
+            if(($listChecks->soon_check_out)>750){
+                $data_soon_check_out = [
+                    'type' => 'soon_check_out',
+                    'user_id' => $listChecks->user_id,
+                    'user_name' => $listChecks->user_name,
+                    'shift_id' => $listChecks->shift_id,
+                    'shift_name' => $listChecks->shift_name,
+                    'shift_time' => $listChecks->shift_time,
+                    'soon_check_out' => $listChecks->soon_check_out
+                ];
+                $list_late_soon[]=$data_soon_check_out;
+            }
+        }
+        return $this->successRequest($list_late_soon);
+    }
 
     public function fakedata()
     {
