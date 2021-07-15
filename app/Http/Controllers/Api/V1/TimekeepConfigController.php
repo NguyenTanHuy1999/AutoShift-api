@@ -192,9 +192,9 @@ class TimekeepConfigController extends Controller
     #region xem chi nhanh
     public function detail()
     {
-        $id = $this->request->get('id');
-        $wifi = WifiConfig::where(['_id' => $id])->first();
-        return $this->successRequest($wifi->transform());
+        $user = $this->user();
+        $timekeppConfig_list = TimekeepConfig::where(['shop_id' => $user->shop_id])->first();
+        return $this->successRequest($timekeppConfig_list->transform());
     }
     #endregion
     public function delete()
