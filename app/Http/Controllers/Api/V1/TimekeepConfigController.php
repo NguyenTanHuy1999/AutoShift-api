@@ -67,12 +67,8 @@ class TimekeepConfigController extends Controller
         $user = $this->user();
         $shop_id = $user->shop_id;
         $validator = \Validator::make($this->request->all(), [
-            'name' => 'required',
-            'bssid' => 'required',
-            'ssid' => 'required',
-            'long' => 'required',
-            'lat' => 'required',
-            'address' => 'required',
+            'wifi' =>'required',
+            'location' => 'required',
             'imageRequire' =>'required'
         ]);
         if ($validator->fails()) {
@@ -80,25 +76,9 @@ class TimekeepConfigController extends Controller
         }
 
 
-        $timekeep_name = $this->request->get('name');
-        $timekeep_ssid = $this->request->get('ssid');
-        $timekeep_bssid = $this->request->get('bssid');
-        $timekeep_long = $this->request->get('long');
-        $timekeep_lat = $this->request->get('lat');
-        $timekeep_address = $this->request->get('address');
+        $wifi = $this->request->get('wifi');
+        $location = $this->request->get('location');
         $timekeep_imageRequire = $this->request->get('imageRequire');
-
-
-       
-        $wifi = [
-            'ssid' =>$timekeep_ssid,
-            'bssid' =>$timekeep_bssid
-        ];
-        $location =[
-            'long' =>$timekeep_long,
-            'lat' => $timekeep_lat,
-            'address' =>$timekeep_address
-        ];
 
 
         $timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
@@ -108,13 +88,11 @@ class TimekeepConfigController extends Controller
             return $this->errorBadRequest('Timekeep_config đã được sử dụng');
         }
         $attributes = [
-            'name' => $timekeep_name,
             'wifi' =>$wifi,
             'location' =>$location,
             'imageRequire' =>$timekeep_imageRequire,
             'shop_id' =>$shop_id
         ];
-
 
         $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
         return $this->successRequest(['data' => $timekeepConfig->transform()]);
@@ -132,12 +110,8 @@ class TimekeepConfigController extends Controller
 
         // Validate Data import.
         $validator = \Validator::make($this->request->all(), [
-            'name' => 'required',
-            'bssid' => 'required',
-            'ssid' => 'required',
-            'long' => 'required',
-            'lat' => 'required',
-            'address' => 'required',
+            'wifi' =>'required',
+            'location' => 'required',
             'imageRequire' =>'required',
             'id' => 'required'
         ]);
@@ -146,31 +120,25 @@ class TimekeepConfigController extends Controller
         }
 
         $id =  $this->request->get('id');
-        $timekeep_name = $this->request->get('name');
-        $timekeep_ssid = $this->request->get('ssid');
-        $timekeep_bssid = $this->request->get('bssid');
-        $timekeep_long = $this->request->get('long');
-        $timekeep_lat = $this->request->get('lat');
-        $timekeep_address = $this->request->get('address');
+       
+        $wifi = $this->request->get('wifi');
+        $location = $this->request->get('location');
         $timekeep_imageRequire = $this->request->get('imageRequire');
 
-        $wifi = [
-            'ssid' =>$timekeep_ssid,
-            'bssid' =>$timekeep_bssid
-        ];
-        $location =[
-            'long' =>$timekeep_long,
-            'lat' => $timekeep_lat,
-            'address' =>$timekeep_address
-        ];
+        $timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
+
+
+        if (!empty($timekeeConfigCheck)) {
+            return $this->errorBadRequest('Wifi hoặc location đã bị trùng');
+        }
 
 
         // lấy thông tin để sửa
         $attributes = [
-            'name' => $timekeep_name,
             'wifi' =>$wifi,
             'location' =>$location,
-            'imageRequire' =>$timekeep_imageRequire
+            'imageRequire' =>$timekeep_imageRequire,
+            'shop_id' =>$shop_id
         ];
         $timekeepConfig = $this->timekeepConfigRepository->update($attributes, $id);
         return $this->successRequest($timekeepConfig->transform());
@@ -199,8 +167,8 @@ class TimekeepConfigController extends Controller
     #endregion
     public function delete()
     {
-        $id = $this->request->get('id');
-        $branch = WifiConfig::where('_id', mongo_id($id))->delete();
-        return $this->successRequest($branch);
+        $user = $this->user();
+        $timekeppConfig_list = TimekeepConfig::where(['shop_id' => $user->shop_id])->delete();
+        return $this->successRequest($timekeppConfig_list);
     }
 }
