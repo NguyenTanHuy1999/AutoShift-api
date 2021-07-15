@@ -123,7 +123,7 @@ class GeneralController extends Controller
             $late_time = null;
             for ($i = 0; $i < count($listHistory_statistical_1, COUNT_NORMAL); $i++) {
                 if (!empty($listHistory_statistical_1)) {
-                    if (($listHistory_statistical_1[$i]["late_check_in"]) > 600 && ($listHistory_statistical_1[$i]["soon_check_out"]) > 600) {
+                    if (($listHistory_statistical_1[$i]["late_check_in"]) > 300 && ($listHistory_statistical_1[$i]["soon_check_out"]) > 300) {
                         $late_time += 1;
                     } else {
                         $on_time += 1;
@@ -153,10 +153,10 @@ class GeneralController extends Controller
         $soon_check_out = null;
         for ($i = 0; $i < count($listCheckOut, COUNT_NORMAL); $i++) {
             if (!empty($listCheckOut)) {
-                if (($listCheckOut[$i]["late_check_in"]) > 780) {
+                if (($listCheckOut[$i]["late_check_in"]) > 480) {
                     $late_check_in += 1;
                 }
-                if (($listCheckOut[$i]["soon_check_out"]) > 780) {
+                if (($listCheckOut[$i]["soon_check_out"]) > 480) {
                     $soon_check_out += 1;
                 }
             }
