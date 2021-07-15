@@ -21,7 +21,6 @@ class TimekeepConfigTransformer extends TransformerAbstract
     {
         $data = [
             'id'    => $model->_id,
-            'name' => $model->name,
             'wifi' => $model->wifi,
             'location' => $model->location,
             'imageRequire' => $model->imageRequire,
