@@ -80,19 +80,16 @@ class SalaryController extends Controller
                 $list_user[] = $user->transform();
             }
         }
+
+        $month_date = Carbon::parse($this->request->get('month_date'));
+        $from_date = $month_date->startOfMonth();
+        $to_date = $month_date->endOfMonth();
+        $month = $month_date->month;
+        $year = $month_date->year;
         for ($i = 0; $i < count($list_user, COUNT_NORMAL); $i++) {
             $user_id = ($list_user[$i]["id"]);
-            //Chọn ngày đầu tháng và cuối tháng cần tính lương
-            $from_date = Carbon::parse($this->request->get('from_date'));
-            $to_date = Carbon::parse($this->request->get('to_date'));
-            //Lấy  startOfDay của from_date và endOfDay của to_date
-            $start_from_date = $from_date->startOfDay();
-            $end_to_date = $to_date->endOfDay();
-            $month = $from_date->month;
-            $year = $from_date->year;
-           
             //Tổng số ca trong tháng(do 1 ngày có 2 ca nên chia 2)
-            $listEmpShift = Empshift::where('user_id', '=', $user_id)->where('working_date', '>=', $start_from_date)->where('working_date', '<=', $end_to_date)->get();
+            $listEmpShift = Empshift::where('user_id', '=', $user_id)->where('working_date', '>=', $from_date)->where('working_date', '<=', $to_date)->get();
             $total_work_read = count($listEmpShift, COUNT_NORMAL) / 2;
             //Lấy lịch sử chấm công của user
             $listHistory = History::where(['user_id' => $user_id, 'type' => 'check_out', 'month' => $month, 'year' => $year])->get();
@@ -226,7 +223,7 @@ class SalaryController extends Controller
         $listUser = User::where(['shop_id' => $shop_id])->get();
         foreach ($listUser as $users) {
             $user_id = $users->_id;
-            $emp_salarys = Salary::where(['user_id' => $user_id, 'month' => $month, 'year' => $year])->get();
+            $emp_salarys = Salary::where(['user_id' => $user_id, 'month' => $month, 'year' => $year])->first();
             $emp_sal[] = $emp_salarys;
         }
         return $this->successRequest($emp_sal);
