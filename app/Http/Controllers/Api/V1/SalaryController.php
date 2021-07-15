@@ -108,11 +108,11 @@ class SalaryController extends Controller
             }
             //Điều kiển trừ lương 
             $total_time_late = $total_late_check_in + $total_soon_check_out;
-            $time_condition1 = 31*60*$total_work_read; //trễ hơn 31 phút  1 ngày
-            $time_condition2 = 32*60*$total_work_read;// trễn hơn 32 phút 1 ngày
-            $time_condition3 = 33*60*$total_work_read;// trễn hơn 33 phút 1 ngày
-            $time_condition4 = 34*60*$total_work_read;// trễn hơn 34 phút 1 ngày
-            $time_condition5 = 35*60*$total_work_read;// trễn hơn 35 phút 1 ngày
+            $time_condition1 = 18*60*$total_work_read; //trễ hơn 18 phút  1 ngày
+            $time_condition2 = 19*60*$total_work_read;// trễn hơn 19 phút 1 ngày
+            $time_condition3 = 20*60*$total_work_read;// trễn hơn 20 phút 1 ngày
+            $time_condition4 = 21*60*$total_work_read;// trễn hơn 21 phút 1 ngày
+            $time_condition5 = 22*60*$total_work_read;// trễn hơn 22 phút 1 ngày
             //Tính lương theo điều kiện đưa ra
             if($total_time_late <= $time_condition1){
                 $basic_salary = $list_user[$i]["basic_salary"];
@@ -132,7 +132,7 @@ class SalaryController extends Controller
             }
             if(($total_time_late > $time_condition1) && ($total_time_late <=$time_condition2)){
                 $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-100000;    
+                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-100000;  
                 $data = [
                     'user_id' => $user_id,
                     'user_info' =>$list_user[$i],
@@ -148,7 +148,7 @@ class SalaryController extends Controller
             }
             if(($total_time_late > $time_condition2) && ($total_time_late <=$time_condition3)){
                 $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-200000;    
+                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-200000;  
                 $data = [
                     'user_id' => $user_id,
                     'user_info' =>$list_user[$i],
@@ -197,7 +197,6 @@ class SalaryController extends Controller
             if($total_time_late > $time_condition5){
                 $basic_salary = $list_user[$i]["basic_salary"];
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-500000;   
-               
                 $data = [
                     'user_id' => $user_id,
                     'user_info' =>$list_user[$i],
