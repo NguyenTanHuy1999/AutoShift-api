@@ -30,7 +30,7 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
         ]);
         $api->post('general/fakedata', [
             'as' => 'general.register',
-            'uses' => 'DepController@fakedata',
+            'uses' => 'GeneralController@fakedata',
         ]);
     });
 });

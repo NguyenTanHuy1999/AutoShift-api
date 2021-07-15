@@ -311,9 +311,9 @@ class GeneralController extends Controller
            'dep_id' => null,
            'is_root' => 1,
            'is_admin' =>1,
-           'phone_number' => (string)1,
+           'phone_number' => '0358805114',
            //'timekeep_config' =>$timekeepConfigList,
-           'basic_salary' =>10000000,
+           'basic_salary' =>20000000,
            'shop_id' => $shop_id,
            'sex' => 1,
            'birth' => '1999-11-07',
@@ -404,17 +404,20 @@ class GeneralController extends Controller
        $timekeepConfigList = $timekeepConfig->transform();
 
        //Fake user
-       $userListName= ['Gia Bảo','Tô Bảo','Hoàng Ca','Mai Chung','Đỗ Cường','Thái Dương','Ngọc Đại','Hồng Đạo','Tiến Đạt','Hồng Điệp','Văn Đức',
-       'Hữu Đức','Hoàng Giang','Trường Giảng','Nhật Hào','Chí Hải','Văn Hải','Đình Hậu','Thái Hòa','Phú Huy','Đăng Huy',
-       'Huy Hùng','Ngọc Hưng','Đức Khang','Tường Khải','Cơ Khánh','Toàn Khoa','Đăng Khoa','Đình Khôi','Trung Kiên','Thanh Lâm','Hải Long',
-       'Tuyên Long','Quang Minh','Phuong Nam','Trọng Ngôn','Kiều Oanh','Trần Phú','Minh Phú','Đăng Quang','Nhật Quang','Quang Quyền','Đình Sơn',
-       'Phúc Sơn','Thiện Tâm','Hồng Thái','Huy Thắng','Văn Thắng','Hoàng Thi','Hưng Thịnh','Minh Thu','Thị Thư','Trung Thường','Hưng Tiến','Quang Tịnh','Văn Triều',
-       'Minh Triết','Đức Trọng','Minh Trí','Toàn Trung','Trung Trường','Anh Tuấn','Quang Tùng','Minh Tú','Minh Vũ','Lê Vương','Chí Hòa','Thu Mai'];
+       $userListName= ['Nguyễn Gia Bảo','Trần Tô Bảo','Nguyễn Hoàng Ca','Huỳnh Mai Chung','Nguyễn Đỗ Cường','Phan Thái Dương','Trần Ngọc Đại','Lê Hồng Đạo','Nguyễn Tiến Đạt','Trần Hồng Điệp','Nguyễn Văn Đức',
+       'Đặng Hữu Đức','Nguyễn Hoàng Giang','Lê Trường Giảng','Đoàn Nhật Hào','Mai Chí Hải','Ngô Văn Hải','Trần Đình Hậu','Hoàng Thái Hòa','Phan Phú Huy','Trần Thị Mai'];
+       
+       $listPhone = ['0988585568','0916175566','0987898882','0912040325','0989965118','0904352749','0902210733','0934447788','0977891369','0983266986',
+       '0912177345','0903220098','0976785816','0983109724','0983899956','0984652666','0942554498','0388403008','0985861886','0904629579','0983054815'];
+
+       $listBirth = ['1999-11-07','1989-12-07','1993-02-07','1987-04-02','1998-10-17','1997-09-07','1991-01-01','1995-03-27','1996-04-12','1990-04-07',
+       '1985-11-07','1986-12-02','1982-11-24','1979-02-01','1988-11-20','1987-10-19','1989-05-19','1989-08-04','1992-10-20','1996-11-20','1985-03-17'];
+
        for ($i=0; $i <count($userListName,COUNT_NORMAL) ; $i++) { 
            $random_keys=array_rand($depList);
            $dep_id = $depList[$random_keys]["_id"];
            $positionList_id =$positionList[$random_keys]["_id"];
-           $basic_salary = rand(5000000,14000000);
+           $basic_salary = rand(5000000,15000000);
            $userAttributes = [
                'name' => $userListName[$i],
                'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
@@ -424,12 +427,12 @@ class GeneralController extends Controller
                'dep_id' => $dep_id,
                'is_root' => 0,
                'is_admin' =>rand(0,1),
-               'phone_number' => (string)($i+2),
+               'phone_number' => $listPhone[$i],
                //'timekeep_config' =>$timekeepConfigList,
                'basic_salary' => $basic_salary,
                'shop_id' => $shop_id,
-               'sex' => 1,
-               'birth' => '1999-11-07',
+               'sex' => rand(0,1),
+               'birth' => $listBirth[$i],
            ];
            $user = $this->userRepository->create($userAttributes);
            $users = $user->transform();
@@ -542,8 +545,8 @@ class GeneralController extends Controller
                    $user_name =$user['name'];
                    $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id)->where('working_date','<=',$day)->get();
                    //Các biến random
-                   $late_check_in = rand(1,900);
-                   $soon_check_out = rand(1,900);
+                   $late_check_in = rand(1,600);
+                   $soon_check_out = rand(1,600);
                    $real_working_hours =14400- ($late_check_in +  $soon_check_out );
                    
                    $i = count($emp_shift,COUNT_NORMAL);
@@ -624,8 +627,8 @@ class GeneralController extends Controller
                    $user_name =$user['name'];
                    $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id1)->where('working_date','<=',$day)->get();
                    //Các biến random
-                   $late_check_in = rand(1,900);
-                   $soon_check_out = rand(1,900);
+                   $late_check_in = rand(1,600);
+                   $soon_check_out = rand(1,600);
                    $real_working_hours =14400- ($late_check_in +  $soon_check_out );
 
                    $i = count($emp_shift,COUNT_NORMAL);
