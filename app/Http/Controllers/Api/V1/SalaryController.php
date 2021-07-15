@@ -80,12 +80,16 @@ class SalaryController extends Controller
                 $list_user[] = $user->transform();
             }
         }
-
+        $data_month_clone = Carbon::parse($this->request->get('month_date'));
         $month_date = Carbon::parse($this->request->get('month_date'));
         $from_date = $month_date->startOfMonth();
-        $to_date = $month_date->endOfMonth();
+        $to_date = $data_month_clone->endOfMonth();
         $month = $month_date->month;
         $year = $month_date->year;
+        $salary_check = Salary::where(['shop_id' => $shop_id, 'month' => $month, 'year' => $year])->first();
+        if (!empty($salary_check)) {
+            return $this->errorBadRequest('Lương tháng này đã được tạo');
+        }
         for ($i = 0; $i < count($list_user, COUNT_NORMAL); $i++) {
             $user_id = ($list_user[$i]["id"]);
             //Tổng số ca trong tháng(do 1 ngày có 2 ca nên chia 2)
@@ -116,6 +120,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read);
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
@@ -132,6 +137,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-100000;  
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
@@ -148,6 +154,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-200000;  
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
@@ -164,6 +171,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-300000;    
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
@@ -180,6 +188,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-400000;    
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,
@@ -196,6 +205,7 @@ class SalaryController extends Controller
                 $real_salary = $basic_salary * ($total_work_day / $total_work_read)-500000;   
                 $data = [
                     'user_id' => $user_id,
+                    'shop_id' => $shop_id,
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
                     'total_work_day' => $total_work_day,

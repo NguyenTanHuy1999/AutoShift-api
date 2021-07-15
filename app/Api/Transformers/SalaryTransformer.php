@@ -23,6 +23,7 @@ class SalaryTransformer extends TransformerAbstract
         $id=$model->user_id;
         return [
             'user_id'=> $model->user_id,
+            'shop_id' =>$model->shop_id,
             'user_info'=> $model->user_info,
             'total_work_time'=>$model->total_work_time,
             'total_work_day'=>$model->total_work_day,
