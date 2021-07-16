@@ -368,8 +368,8 @@ class GeneralController extends Controller
        $timekeep_name = 'Home';
        $timekeep_ssid = 'My Huyen';
        $timekeep_bssid = '44:fb:5a:91:d5:7a';
-       $timekeep_long ='10.523153';
-       $timekeep_lat = '106.716475';
+       $timekeep_lat ='10.523153';
+       $timekeep_long = '106.716475';
        $timekeep_address = 'Long An';
        $timekeep_imageRequire = 'false';
 
@@ -377,12 +377,14 @@ class GeneralController extends Controller
       
        $wifi = [
            'ssid' =>$timekeep_ssid,
-           'bssid' =>$timekeep_bssid
+           'bssid' =>$timekeep_bssid,
+           'require' =>true
        ];
        $location =[
            'long' =>$timekeep_long,
            'lat' => $timekeep_lat,
-           'address' =>$timekeep_address
+           'address' =>$timekeep_address,
+           'require' =>true
        ];
 
 
