@@ -94,26 +94,36 @@ class EmpClockController extends Controller
         $timekeep_client = $this->request->get('timekeep');
        //lấy thông tin timekeep_config từ database
         $timekeep_config = TimekeepConfig::where('shop_id','=',$user->shop_id)->first();
-        $timekeep_config_db_wifi = $timekeep_config['wifi'];
+        $timekeep_config_db_wifi_bssid = $timekeep_config['wifi']['bssid'];
         $timekeep_config_db_long = $timekeep_config['location']['long'];
         $timekeep_config_db_lat = $timekeep_config['location']['lat'];
-
+        $timekeep_config_db_wifi_require = $timekeep_config['wifi']['require'];
+        $timekeep_config_db_location_require = $timekeep_config['location']['require'];
         //thông tin timekeep_config từ client trả về 
-        $timekeep_client_wifi = $timekeep_client['wifi'];
+        $timekeep_client_wifi_bssid = $timekeep_client['wifi']['bssid'];
         $timekeep_client_long = $timekeep_client['location']['long'];
         $timekeep_client_lat = $timekeep_client['location']['lat'];
 
         //xử lý validate timekeep_config
-        if($timekeep_client_wifi != $timekeep_config_db_wifi){
-            return $this->errorBadRequest('Wifi kết nối không phù hợp');
+        if ($timekeep_config_db_wifi_require) {
+            if($timekeep_client_wifi_bssid != $timekeep_config_db_wifi_bssid){
+                return $this->errorBadRequest('Wifi kết nối không phù hợp');
+            }
+        }else{
+            return $this->errorBadRequest('require');
         }
+        
         //khoảng cách từ điểm cố định đến điểm client trả về
-        $distance = sqrt(($timekeep_client_long*$timekeep_client_long - 2*$timekeep_client_long*$timekeep_config_db_long + $timekeep_config_db_long*$timekeep_config_db_long) + 
-                        ($timekeep_client_lat*$timekeep_client_lat - 2*$timekeep_client_lat*$timekeep_config_db_lat + $timekeep_config_db_lat*$timekeep_config_db_lat));
-
-        if($distance >0.001){
-            return $this->errorBadRequest('Bạn đang ở quá xa vị trí chấm công');
+        
+        $distance = distance($timekeep_config_db_lat,$timekeep_config_db_long,$timekeep_client_lat,$timekeep_client_long);
+        if ($timekeep_config_db_location_require) {
+            if($distance >100){
+                return $this->errorBadRequest('Bạn đang ở quá xa vị trí chấm công');
+            }
+        }else{
+            return $this->errorBadRequest('require');
         }
+        
 
         $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
             ->where(['user_id' => $user_id])
