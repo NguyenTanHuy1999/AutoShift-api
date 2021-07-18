@@ -543,7 +543,7 @@ class DepController extends Controller
 
         $depname = $this->request->get('name');
         //$branchCheck = Branch::where(['_id' => mongo_id($this->request->get('branch_id')),])->first();
-        $depCheck = Dep::where(['name' => $depname])->first();
+        $depCheck = Dep::where(['name' => $depname,'shop_id'=> mongo_id($user->shop_id)])->first();
 
         // dd($depCheck->name);
         //if (empty($branchCheck)) {
@@ -558,7 +558,7 @@ class DepController extends Controller
         $attributes = [
             'name' => $depname,
             //'branch_id' => mongo_id($branchCheck->_id),
-            'shop_id' => mongo_id($branchCheck->shop_id),
+            'shop_id' => $user->shop_id,
             'note' => $this->request->get('note')
         ];
         $dep = $this->depRepository->create($attributes);
@@ -699,7 +699,7 @@ class DepController extends Controller
         // Validate Data import.
         $validator = \Validator::make($this->request->all(), [
             'id' => 'required',
-            'dep_name' => 'required',
+            'name' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->errorBadRequest($validator->messages()->toArray());
@@ -714,7 +714,7 @@ class DepController extends Controller
         }
         // lấy thông tin để sửa
         $attributes = [
-            'dep_name' => $this->request->get('dep_name'),
+            'name' => $this->request->get('name'),
         ];
         $dep = $this->depRepository->update($attributes, mongo_id($id));
         return $this->successRequest($dep->transform());
