@@ -59,8 +59,8 @@ class UserController extends Controller
                 'email' => 'nullable',
                 'dep_id' => 'nullable',
                 'phone_number' => 'required',
-                'basic_salary' => 'required',
-                'is_admin' => 'required',
+                'basic_salary' => 'nullable',
+                'is_admin' => 'nullable',
                 'sex' => 'nullable',
             ]);
             if ($validator->fails()) {
@@ -89,7 +89,24 @@ class UserController extends Controller
                 return $this->successRequest($user->transform());
             }
             else{
-                return $this->errorBadRequest(trans('Lỗi về chọn avatar'));
+                $email = strtolower($this->request->get('email'));
+                $basic_salary = $this->request->get('basic_salary');
+                $userAttributes = [
+                    'name' => $this->request->get('name'),
+                    'avatar' => null,
+                    'email' => $email,
+                    'position_id' => mongo_id($this->request->get('position_id')),
+                    'dep_id' => mongo_id($this->request->get('dep_id')),
+                    'is_root' => 0,
+                    'is_admin' => $this->request->get('is_admin'),
+                    'phone_number' => $this->request->get('phone_number'),
+                    'basic_salary' => $basic_salary,
+                    'shop_id' => $this->user()->shop_id,
+                    'sex' => $this->request->get('sex'),
+                    'birth' => $this->request->get('birth'),
+                ];
+                $user = $this->userRepository->create($userAttributes);
+                return $this->successRequest($user->transform());
             }
         }
     }    
@@ -165,7 +182,8 @@ class UserController extends Controller
                 'email' => 'nullable',
                 'dep_id' => 'nullable',
                 'phone_number' => 'required',
-                'basic_salary' => 'required',
+                'basic_salary' => 'nullable',
+                'is_admin' => 'nullable',
                 'sex' => 'nullable',
             ]);
             if ($validator->fails()) {
@@ -178,11 +196,12 @@ class UserController extends Controller
                 $basic_salary = $this->request->get('basic_salary');
                 $userAttributes = [
                     'name' => $this->request->get('name'),
-                    'avatar' => $avatar_url,
+                    'avatar' => null,
                     'email' => $email,
                     'position_id' => mongo_id($this->request->get('position_id')),
                     'dep_id' => mongo_id($this->request->get('dep_id')),
                     'is_root' => 0,
+                    'is_admin' => $this->request->get('is_admin'),
                     'phone_number' => $this->request->get('phone_number'),
                     'basic_salary' => $basic_salary,
                     'shop_id' => $this->user()->shop_id,
@@ -193,7 +212,24 @@ class UserController extends Controller
                 return $this->successRequest($user->transform());
             }
             else{
-                return $this->errorBadRequest(trans('Lỗi về chọn avatar'));
+                $email = strtolower($this->request->get('email'));
+                $basic_salary = $this->request->get('basic_salary');
+                $userAttributes = [
+                    'name' => $this->request->get('name'),
+                    'avatar' => null,
+                    'email' => $email,
+                    'position_id' => mongo_id($this->request->get('position_id')),
+                    'dep_id' => mongo_id($this->request->get('dep_id')),
+                    'is_root' => 0,
+                    'is_admin' => $this->request->get('is_admin'),
+                    'phone_number' => $this->request->get('phone_number'),
+                    'basic_salary' => $basic_salary,
+                    'shop_id' => $this->user()->shop_id,
+                    'sex' => $this->request->get('sex'),
+                    'birth' => $this->request->get('birth'),
+                ];
+                $user = $this->userRepository->update($userAttributes, $user->_id);
+                return $this->successRequest($user->transform());
             }
         }
     }
