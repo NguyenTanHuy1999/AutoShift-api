@@ -292,7 +292,7 @@ class GeneralController extends Controller
         //Fake shop 
         // Tạo shop trước
        $attributesShop = [
-           'name' => 'TANHUY',
+           'name' => 'coxinc',
            'shop_name' => $this->request->get('shop_name'),
            'email' => $this->request->get('name'),
        ];
@@ -303,7 +303,7 @@ class GeneralController extends Controller
        //User Admin
 
        $admin_info = [
-           'name' => $shop['name'],
+           'name' => 'root',
            'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
            'email' => null,
            'position_id' => null,
@@ -314,7 +314,7 @@ class GeneralController extends Controller
            'phone_number' => '0358805114',
            //'timekeep_config' =>$timekeepConfigList,
            'basic_salary' =>20000000,
-           'shop_id' => $shop_id,
+           'shop_id' => mongo_id($shop_id),
            'sex' => 1,
            'birth' => '1999-11-07',
        ];
@@ -344,7 +344,7 @@ class GeneralController extends Controller
            $attributes = [
                'name' => $depListName[$i],
                //'branch_id' => $branch_id,
-               'shop_id' => $shop_id,
+               'shop_id' => mongo_id($shop_id),
                'note' => $this->request->get('note')
            ];
            $dep = $this->depRepository->create($attributes);
@@ -357,7 +357,7 @@ class GeneralController extends Controller
        for ($i=0; $i <5 ; $i++) { 
          
            $attributes = [
-               'shop_id' => $shop_id,
+               'shop_id' => mongo_id($shop_id),
                'position_name' => $position_name[$i],
            ];
            $position = $this->positionRepository->create($attributes);
@@ -399,7 +399,7 @@ class GeneralController extends Controller
            'wifi' =>$wifi,
            'location' =>$location,
            'imageRequire' =>$timekeep_imageRequire,
-           'shop_id' =>$shop_id
+           'shop_id' =>mongo_id($shop_id)
        ];
 
        $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
@@ -432,7 +432,7 @@ class GeneralController extends Controller
                'phone_number' => $listPhone[$i],
                //'timekeep_config' =>$timekeepConfigList,
                'basic_salary' => $basic_salary,
-               'shop_id' => $shop_id,
+               'shop_id' => mongo_id($shop_id),
                'sex' => rand(0,1),
                'birth' => $listBirth[$i],
            ];
@@ -452,7 +452,7 @@ class GeneralController extends Controller
            true,
            true,
            true,
-           false
+           true,
        ];
        for ($i=0; $i <2 ; $i++) { 
            //$random_keys=array_rand($depList);
@@ -461,7 +461,7 @@ class GeneralController extends Controller
            //$branch_id = $branchList[$random_keys1]["_id"];
            $attributes = [
                'name' => $shiftListName[$i],
-               'shop_id' => $shop_id,
+               'shop_id' =>mongo_id($shop_id),
               // 'branch_ids' => $branch_id,
                //'dep_ids' => $dep_id,
                'time_begin' => $listTimeBegin[$i],
@@ -494,8 +494,8 @@ class GeneralController extends Controller
                    if ($assignments[$dayOfWeek]) {
                        $attributes = [
                            'shift_name' => $shiftListName[$i],
-                           'user_id' => $user_id,
-                           'shift_id' => $shiftList[$i]["_id"],
+                           'user_id' => mongo_id($user_id),
+                           'shift_id' => mongo_id($shiftList[$i]["_id"]),
                            'working_date' => $day,
                            'time_begin' => $listTimeBegin[$i],
                            'time_end' => $listTimeEnd[$i],
@@ -535,7 +535,7 @@ class GeneralController extends Controller
        $shift_id = $shiftList[0]["_id"];
        $shift_name = $shiftList[0]["name"];
        $work_date_begin = Carbon::now()->startofYear();
-       $work_date_end = Carbon::now();
+       $work_date_end = Carbon::now()->subDay(1);
        //Khoảng thờI gian khởi tạo ca
        $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
        foreach ($userList as $user) {
@@ -545,7 +545,7 @@ class GeneralController extends Controller
                    $time_check = $day->addHour(7)->addMinute(55)->addMinutes(rand(1,20));
                    $user_id = $user['id'];
                    $user_name =$user['name'];
-                   $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id)->where('working_date','<=',$day)->get();
+                   $emp_shift = Empshift::where('user_id','=',mongo_id($user_id))->where('shift_id','=',mongo_id($shift_id))->where('working_date','<=',$day)->get();
                    //Các biến random
                    $late_check_in = rand(1,600);
                    $soon_check_out = rand(1,600);
@@ -558,13 +558,13 @@ class GeneralController extends Controller
                   
                    //History check in
                    $data = [
-                       'user_id' => $user_id,
+                       'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
-                       'emp_shift_id' => $emp_shift_id,
+                       'emp_shift_id' => mongo_id($emp_shift_id),
                        'shift_name' => $shift_name,
                        'shift_time' => '8:00-12:00',
-                       'shift_id' => $shift_id,
+                       'shift_id' =>mongo_id($shift_id),
                        'time_check' => $time_check,
                        'status' => 1,
                        'timekeep_config' => $timekeepConfigList,
@@ -574,9 +574,9 @@ class GeneralController extends Controller
                    //dd($emp_history);
                    //EmpClock check in
                    $attribute = [
-                       'user_id' => $user_id,
-                       'emp_shift_id' => $emp_shift_id,
-                       'shift_id' => $shift_id,
+                       'user_id' => mongo_id($user_id),
+                       'emp_shift_id' => mongo_id($emp_shift_id),
+                       'shift_id' => mongo_id($shift_id),
                        'time_in' => $time_check,
                        'time_out' => null,
                        'status' => 1,
@@ -584,7 +584,7 @@ class GeneralController extends Controller
                    ];
                    //EmpClock check out
                    $emp_clock = $this->empclockRepository->create($attribute);
-                   $clock_check =EmpClock::where(['user_id' => $user_id,'isCheckOut' => false])->first();
+                   $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
                    $attribute1 = [
                        'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,20)),
                        'status' => 0,
@@ -593,11 +593,11 @@ class GeneralController extends Controller
                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
                    //History check out
                    $data1 = [
-                       'user_id' => $user_id,
+                       'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
-                       'emp_shift_id' => $emp_shift_id,
-                       'shift_id' => $shift_id,
+                       'emp_shift_id' => mongo_id($emp_shift_id),
+                       'shift_id' => mongo_id($shift_id),
                        'shift_name' => $shift_name,
                        'shift_time' => '8:00-12:00',
                        'time_check' => $time_check,
@@ -627,7 +627,7 @@ class GeneralController extends Controller
                    //dd($time_check);
                    $user_id = $user['id'];
                    $user_name =$user['name'];
-                   $emp_shift = Empshift::where('user_id','=',$user_id)->where('shift_id','=',$shift_id1)->where('working_date','<=',$day)->get();
+                   $emp_shift = Empshift::where('user_id','=',mongo_id($user_id))->where('shift_id','=',mongo_id($shift_id1))->where('working_date','<=',$day)->get();
                    //Các biến random
                    $late_check_in = rand(1,600);
                    $soon_check_out = rand(1,600);
@@ -639,10 +639,10 @@ class GeneralController extends Controller
                    $emp_shift_id = $emp_shift[$i-1]["_id"];
                    //History check in
                    $data = [
-                       'user_id' => $user_id,
+                       'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
-                       'emp_shift_id' => $emp_shift_id,
+                       'emp_shift_id' => mongo_id($emp_shift_id),
                        'shift_name' => $shift_name1,
                        'shift_time' => '13:30-17:30',
                        'shift_id' => $shift_id1,
@@ -655,9 +655,9 @@ class GeneralController extends Controller
        
                    //EmpClock check in
                    $attribute = [
-                       'user_id' => $user_id,
-                       'emp_shift_id' => $emp_shift_id,
-                       'shift_id' => $shift_id1,
+                       'user_id' => mongo_id($user_id),
+                       'emp_shift_id' => mongo_id($emp_shift_id),
+                       'shift_id' => mongo_id($shift_id1),
                        'time_in' => $time_check,
                        'time_out' => null,
                        'status' => 1,
@@ -665,7 +665,7 @@ class GeneralController extends Controller
                    ];
                    //EmpClock check out
                    $emp_clock = $this->empclockRepository->create($attribute);
-                   $clock_check =EmpClock::where(['user_id' => $user_id,'isCheckOut' => false])->first();
+                   $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
                    $attribute1 = [
                        'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,30)),
                        'status' => 0,
@@ -674,11 +674,11 @@ class GeneralController extends Controller
                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
                    //History check out
                    $data1 = [
-                       'user_id' => $user_id,
+                       'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
-                       'emp_shift_id' => $emp_shift_id,
-                       'shift_id' => $shift_id1,
+                       'emp_shift_id' => mongo_id($emp_shift_id),
+                       'shift_id' => mongo_id($shift_id1),
                        'shift_name' => $shift_name1,
                        'shift_time' => '13:30-17:30',
                        'time_check' => $day,
