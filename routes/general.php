@@ -20,7 +20,7 @@ $api = app('Dingo\Api\Routing\Router');
 $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($api) {
     $api->group(['middleware' => ['api.locale']], function ($api) {
 
-        $api->post('general/statistical', [
+        $api->get('general/statistical', [
             'as' => 'general.statistical',
             'uses' => 'GeneralController@statistical',
         ]);
