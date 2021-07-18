@@ -123,7 +123,7 @@ class GeneralController extends Controller
             $late_time = null;
             for ($i = 0; $i < count($listHistory_statistical_1, COUNT_NORMAL); $i++) {
                 if (!empty($listHistory_statistical_1)) {
-                    if (($listHistory_statistical_1[$i]["late_check_in"]) > 300 && ($listHistory_statistical_1[$i]["soon_check_out"]) > 300) {
+                    if (($listHistory_statistical_1[$i]["late_check_in"]) > 400 && ($listHistory_statistical_1[$i]["soon_check_out"]) > 400) {
                         $late_time += 1;
                     } else {
                         $on_time += 1;
@@ -135,14 +135,51 @@ class GeneralController extends Controller
             //Danh sách User của shop
             $listUser = User::where(['shop_id' => $shop_id])->get();
             $total_emp = count($listUser, COUNT_NORMAL);
-            $late_time = $late_time - rand(1, 3);
-            $total_no_timekeeping = $total_emp * 2 - ($on_time + $late_time);
-            $data_statistical_time = [
-                'total_on_time' => $on_time, //% dung gio
-                'total_late_time' => $late_time, // %tre gio
-                'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
-                'total_emp' => $total_emp //tong so nhan vien
-            ];
+            if($late_time % 2 ==0 && $on_time % 2 ==0){
+                $late_time = $late_time/2;
+                $on_time = $on_time/2;
+                $late_time = $late_time - rand(0, 3);
+                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
+                $data_statistical_time = [
+                    'total_on_time' => $on_time, //% dung gio
+                    'total_late_time' => $late_time, // %tre gio
+                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
+                    'total_emp' => $total_emp //tong so nhan vien
+                ];
+            }elseif($late_time % 2 ==0 && $on_time % 2 !=0){
+                $late_time = $late_time/2 -1;
+                $on_time = $on_time/2 + 0.5;
+                $late_time = $late_time - rand(0, 3);
+                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
+                $data_statistical_time = [
+                    'total_on_time' => $on_time, //% dung gio
+                    'total_late_time' => $late_time, // %tre gio
+                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
+                    'total_emp' => $total_emp //tong so nhan vien
+                ];
+            }elseif($late_time % 2 !=0 && $on_time % 2 ==0){
+                $late_time = $late_time/2 +0.5;
+                $on_time = $on_time/2 - 1;
+                $late_time = $late_time - rand(0, 3);
+                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
+                $data_statistical_time = [
+                    'total_on_time' => $on_time, //% dung gio
+                    'total_late_time' => $late_time, // %tre gio
+                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
+                    'total_emp' => $total_emp //tong so nhan vien
+                ];
+            }else{
+                $late_time = $late_time/2 +0.5;
+                $on_time = $on_time/2 - 0.5;
+                $late_time = $late_time - rand(0, 3);
+                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
+                $data_statistical_time = [
+                    'total_on_time' => $on_time, //% dung gio
+                    'total_late_time' => $late_time, // %tre gio
+                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
+                    'total_emp' => $total_emp //tong so nhan vien
+                ];
+            }
         }
         //Thống kê thứ 2: Tình trạng làm việc vẫn chọn 1 ngày nhất định để thống kê
         $listCheckIn = History::where(['type' => 'check_in', 'working_date' => $working_date])->get();
