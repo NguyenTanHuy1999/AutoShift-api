@@ -34,7 +34,7 @@ class HistoryTransformer extends TransformerAbstract
         return [
             'date' => format_get_date($model->time_check, 'date'),
             'data' => [
-                'name' => $model->user_name,
+                'name' => $s_name,
                 'time' => format_get_date($model->time_check),
                 'activity' => $shift_status,
                 'shift' => $shift ? $shift->transform() : null

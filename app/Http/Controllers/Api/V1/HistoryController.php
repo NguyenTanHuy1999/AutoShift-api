@@ -68,7 +68,7 @@ class HistoryController extends Controller
     {
         $user = $this->user();
         $user_id = $user->_id;
-        $emp_history = History::where(['user_id' => $user_id])->orderBy('created_at', 'desc')->get();
+        $emp_history = History::where(['user_id' => mongo_id($user_id)])->orderBy('created_at', 'desc')->get();
         $emp_his = [];
         foreach ($emp_history as $index) {
             $emp_his[] = $index->transform();
