@@ -22,6 +22,8 @@ class Empshift extends Moloquent
         'updated_at',
         'deleted_at',
         'working_date',
+        'checkin_time',
+        'checkout_time',
     ];
 
     public function transform($type = '')
