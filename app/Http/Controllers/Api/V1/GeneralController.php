@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api\V1;
+
 use App\Api\Repositories\Contracts\BranchRepository;
 use App\Api\Repositories\Contracts\DepRepository;
 use App\Api\Repositories\Contracts\ShopRepository;
@@ -105,8 +106,9 @@ class GeneralController extends Controller
      * }
      * }
      */
-    public function statistical(){
-        //Thống kê thứ 1: Theo % đúng giờ, trễ giờ, không chấm công và  tổng số nhân viên 
+    public function statistical()
+    {
+        //Thống kê thứ 1: Theo % đúng giờ, trễ giờ, không chấm công và  tổng số nhân viên
         //Chọn ngày cần xem thống kê
         $date = Carbon::parse($this->request->get('date')); //Ngày client chọn
         $working_date = $date->startOfDay();
@@ -135,7 +137,7 @@ class GeneralController extends Controller
             //Danh sách User của shop
             $listUser = User::where(['shop_id' => $shop_id])->get();
             $total_emp = count($listUser, COUNT_NORMAL);
-            if($late_time % 2 ==0 && $on_time % 2 ==0){
+            if ($late_time % 2 ==0 && $on_time % 2 ==0) {
                 $late_time = $late_time/2;
                 $on_time = $on_time/2;
                 $late_time = $late_time - rand(0, 3);
@@ -146,7 +148,7 @@ class GeneralController extends Controller
                     'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
                     'total_emp' => $total_emp //tong so nhan vien
                 ];
-            }elseif($late_time % 2 ==0 && $on_time % 2 !=0){
+            } elseif ($late_time % 2 ==0 && $on_time % 2 !=0) {
                 $late_time = $late_time/2 -1;
                 $on_time = $on_time/2 + 0.5;
                 $late_time = $late_time - rand(0, 3);
@@ -157,7 +159,7 @@ class GeneralController extends Controller
                     'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
                     'total_emp' => $total_emp //tong so nhan vien
                 ];
-            }elseif($late_time % 2 !=0 && $on_time % 2 ==0){
+            } elseif ($late_time % 2 !=0 && $on_time % 2 ==0) {
                 $late_time = $late_time/2 +0.5;
                 $on_time = $on_time/2 - 1;
                 $late_time = $late_time - rand(0, 3);
@@ -168,7 +170,7 @@ class GeneralController extends Controller
                     'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
                     'total_emp' => $total_emp //tong so nhan vien
                 ];
-            }else{
+            } else {
                 $late_time = $late_time/2 +0.5;
                 $on_time = $on_time/2 - 0.5;
                 $late_time = $late_time - rand(0, 3);
@@ -289,7 +291,7 @@ class GeneralController extends Controller
         $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
         $list_late_soon = [];
         foreach ($listCheckOut as $listChecks) {
-            if(($listChecks->late_check_in)>750){
+            if (($listChecks->late_check_in)>750) {
                 $data_late_check_in = [
                     'type' => 'late_check_in',
                     'user_id' => $listChecks->user_id,
@@ -301,7 +303,7 @@ class GeneralController extends Controller
                 ];
                 $list_late_soon[]=$data_late_check_in;
             }
-            if(($listChecks->soon_check_out)>750){
+            if (($listChecks->soon_check_out)>750) {
                 $data_soon_check_out = [
                     'type' => 'soon_check_out',
                     'user_id' => $listChecks->user_id,
@@ -319,27 +321,27 @@ class GeneralController extends Controller
 
     public function fakedata()
     {
-       $depList = [];
-       $userList = [];
-       $positionList =[];
-       //$branchList =[];
-       $shiftList =[];
-       $empShiftList =[];
-       $wifiList = [];
-        //Fake shop 
+        $depList = [];
+        $userList = [];
+        $positionList =[];
+        //$branchList =[];
+        $shiftList =[];
+        $empShiftList =[];
+        $wifiList = [];
+        //Fake shop
         // Tạo shop trước
-       $attributesShop = [
+        $attributesShop = [
            'name' => 'coxinc',
            'shop_name' => $this->request->get('shop_name'),
            'email' => $this->request->get('name'),
        ];
-       $shop = $this->shopRepository->create($attributesShop);
-       //Shop_id
-       $shop_id = $shop['_id'];
+        $shop = $this->shopRepository->create($attributesShop);
+        //Shop_id
+        $shop_id = $shop['_id'];
 
-       //User Admin
+        //User Admin
 
-       $admin_info = [
+        $admin_info = [
            'name' => 'root',
            'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
            'email' => null,
@@ -355,69 +357,68 @@ class GeneralController extends Controller
            'sex' => 1,
            'birth' => '1999-11-07',
        ];
-       $user = $this->userRepository->create($admin_info);
-       $users = $user->transform();
-       $userList[]=$users;
+        $user = $this->userRepository->create($admin_info);
+        $users = $user->transform();
+        $userList[]=$users;
        
-       //Fake branch bỏ branch
-      // $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
-       //for ($i=0; $i <3; $i++) { 
-       //    $random_keys=array_rand($branchListName);
-       //    $attributesDep = [
-       //        'name' => $branchListName[$random_keys],
-       //        'address' => 'Long An',
-       //        'shop_id' => $shop_id,
-      //         'note' => $this->request->get('note'),
-      //     ];
-      //     $branch = $this->branchRepository->create($attributesDep);
-      //     $branchList[]=$branch;
-      // }
-       //Fake dep
-       $depListName = [ 'Accountant','Human Resource','Financial','Technical ','Business'];
+        //Fake branch bỏ branch
+        // $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
+        //for ($i=0; $i <3; $i++) {
+        //    $random_keys=array_rand($branchListName);
+        //    $attributesDep = [
+        //        'name' => $branchListName[$random_keys],
+        //        'address' => 'Long An',
+        //        'shop_id' => $shop_id,
+        //         'note' => $this->request->get('note'),
+        //     ];
+        //     $branch = $this->branchRepository->create($attributesDep);
+        //     $branchList[]=$branch;
+        // }
+        //Fake dep
+        $depListName = [ 'Accountant','Human Resource','Financial','Technical ','Business'];
 
-       for ($i=0; $i <5 ; $i++) { 
-          // $random_keys1=array_rand($branchList);
-          // $branch_id = $branchList[$random_keys1]["_id"];
-           $attributes = [
+        for ($i=0; $i <5 ; $i++) {
+            // $random_keys1=array_rand($branchList);
+            // $branch_id = $branchList[$random_keys1]["_id"];
+            $attributes = [
                'name' => $depListName[$i],
                //'branch_id' => $branch_id,
                'shop_id' => mongo_id($shop_id),
                'note' => $this->request->get('note')
            ];
-           $dep = $this->depRepository->create($attributes);
-           $depList[]= $dep;
-       }
+            $dep = $this->depRepository->create($attributes);
+            $depList[]= $dep;
+        }
 
-       //Fake position
-       $position_name = [ 'Accountanting manager','Human resources manager','Finance manager','Technical manager','Business manager'];
+        //Fake position
+        $position_name = [ 'Accountanting manager','Human resources manager','Finance manager','Technical manager','Business manager'];
 
-       for ($i=0; $i <5 ; $i++) { 
-         
-           $attributes = [
+        for ($i=0; $i <5 ; $i++) {
+            $attributes = [
                'shop_id' => mongo_id($shop_id),
                'position_name' => $position_name[$i],
            ];
-           $position = $this->positionRepository->create($attributes);
-           $positionList[]= $position;
-       }
+            $position = $this->positionRepository->create($attributes);
+            $positionList[]= $position;
+        }
 
-       //Fake timekeep_config
-       $timekeep_name = 'Home';
-       $timekeep_ssid = 'My Huyen';
-       $timekeep_bssid = '44:fb:5a:91:d5:7a';
-       $timekeep_long ='10.523153';
-       $timekeep_lat = '106.716475';
-       $timekeep_address = 'Long An';
-       $timekeep_imageRequire = 'false';
+        //Fake timekeep_config
+        $timekeep_name = 'Home';
+        $timekeep_ssid = 'My Huyen';
+        $timekeep_bssid = '44:fb:5a:91:d5:7a';
+        $timekeep_long ='10.523153';
+        $timekeep_lat = '106.716475';
+        $timekeep_address = 'Long An';
+        $timekeep_imageRequire = 'false';
 
 
       
-       $wifi = [
+        $wifi = [
            'ssid' =>$timekeep_ssid,
            'bssid' =>$timekeep_bssid,
            'require' =>true
        ];
-       $location =[
+        $location =[
            'long' =>$timekeep_long,
            'lat' => $timekeep_lat,
            'address' =>$timekeep_address,
@@ -425,13 +426,13 @@ class GeneralController extends Controller
        ];
 
 
-       //$timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
+        //$timekeeConfigCheck = TimekeepConfig::where(['wifi' => $wifi,'location'=>$location])->first();
 
 
-       //if (!empty($timekeeConfigCheck)) {
-       //    return $this->errorBadRequest('Timekeep_config đã được sử dụng');
-       //}
-       $attributes = [
+        //if (!empty($timekeeConfigCheck)) {
+        //    return $this->errorBadRequest('Timekeep_config đã được sử dụng');
+        //}
+        $attributes = [
            //'name' => $timekeep_name,
            'wifi' =>$wifi,
            'location' =>$location,
@@ -439,25 +440,25 @@ class GeneralController extends Controller
            'shop_id' =>mongo_id($shop_id)
        ];
 
-       $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
-       $timekeepConfigList = $timekeepConfig->transform();
+        $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
+        $timekeepConfigList = $timekeepConfig->transform();
 
-       //Fake user
-       $userListName= ['Nguyễn Gia Bảo','Trần Tô Bảo','Nguyễn Hoàng Ca','Huỳnh Mai Chung','Nguyễn Đỗ Cường','Phan Thái Dương','Trần Ngọc Đại','Lê Hồng Đạo','Nguyễn Tiến Đạt','Trần Hồng Điệp','Nguyễn Văn Đức',
+        //Fake user
+        $userListName= ['Nguyễn Gia Bảo','Trần Tô Bảo','Nguyễn Hoàng Ca','Huỳnh Mai Chung','Nguyễn Đỗ Cường','Phan Thái Dương','Trần Ngọc Đại','Lê Hồng Đạo','Nguyễn Tiến Đạt','Trần Hồng Điệp','Nguyễn Văn Đức',
        'Đặng Hữu Đức','Nguyễn Hoàng Giang','Lê Trường Giảng','Đoàn Nhật Hào','Mai Chí Hải','Ngô Văn Hải','Trần Đình Hậu','Hoàng Thái Hòa','Phan Phú Huy','Trần Thị Mai'];
        
-       $listPhone = ['0988585568','0916175566','0987898882','0912040325','0989965118','0904352749','0902210733','0934447788','0977891369','0983266986',
+        $listPhone = ['0988585568','0916175566','0987898882','0912040325','0989965118','0904352749','0902210733','0934447788','0977891369','0983266986',
        '0912177345','0903220098','0976785816','0983109724','0983899956','0984652666','0942554498','0388403008','0985861886','0904629579','0983054815'];
 
-       $listBirth = ['1999-11-07','1989-12-07','1993-02-07','1987-04-02','1998-10-17','1997-09-07','1991-01-01','1995-03-27','1996-04-12','1990-04-07',
+        $listBirth = ['1999-11-07','1989-12-07','1993-02-07','1987-04-02','1998-10-17','1997-09-07','1991-01-01','1995-03-27','1996-04-12','1990-04-07',
        '1985-11-07','1986-12-02','1982-11-24','1979-02-01','1988-11-20','1987-10-19','1989-05-19','1989-08-04','1992-10-20','1996-11-20','1985-03-17'];
 
-       for ($i=0; $i <count($userListName,COUNT_NORMAL) ; $i++) { 
-           $random_keys=array_rand($depList);
-           $dep_id = $depList[$random_keys]["_id"];
-           $positionList_id =$positionList[$random_keys]["_id"];
-           $basic_salary = rand(5000000,15000000);
-           $userAttributes = [
+        for ($i=0; $i <count($userListName, COUNT_NORMAL) ; $i++) {
+            $random_keys=array_rand($depList);
+            $dep_id = $depList[$random_keys]["_id"];
+            $positionList_id =$positionList[$random_keys]["_id"];
+            $basic_salary = rand(5000000, 15000000);
+            $userAttributes = [
                'name' => $userListName[$i],
                'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
                'email' => 'admin@gmail.com',
@@ -465,24 +466,24 @@ class GeneralController extends Controller
                //'branch_id' => $branch_id,
                'dep_id' => $dep_id,
                'is_root' => 0,
-               'is_admin' =>rand(0,1),
+               'is_admin' =>rand(0, 1),
                'phone_number' => $listPhone[$i],
                //'timekeep_config' =>$timekeepConfigList,
                'basic_salary' => $basic_salary,
                'shop_id' => mongo_id($shop_id),
-               'sex' => rand(0,1),
+               'sex' => rand(0, 1),
                'birth' => $listBirth[$i],
            ];
-           $user = $this->userRepository->create($userAttributes);
-           $users = $user->transform();
-           $userList[]=$users;
-       }
-       //Fake Shift
-       // Tạo ca lớn
-       $shiftListName =['Ca Sáng','Ca Chiều'];
-       $listTimeBegin =['8:00','13:30'];
-       $listTimeEnd=['12:00','17:30'];
-       $assignments=[
+            $user = $this->userRepository->create($userAttributes);
+            $users = $user->transform();
+            $userList[]=$users;
+        }
+        //Fake Shift
+        // Tạo ca lớn
+        $shiftListName =['Ca Sáng','Ca Chiều'];
+        $listTimeBegin =['8:00','13:30'];
+        $listTimeEnd=['12:00','17:30'];
+        $assignments=[
            false,
            true,
            true,
@@ -491,12 +492,12 @@ class GeneralController extends Controller
            true,
            true,
        ];
-       for ($i=0; $i <2 ; $i++) { 
-           //$random_keys=array_rand($depList);
-           //$dep_id = $depList[$random_keys]["_id"];
-           //$random_keys1=array_rand($branchList);
-           //$branch_id = $branchList[$random_keys1]["_id"];
-           $attributes = [
+        for ($i=0; $i <2 ; $i++) {
+            //$random_keys=array_rand($depList);
+            //$dep_id = $depList[$random_keys]["_id"];
+            //$random_keys1=array_rand($branchList);
+            //$branch_id = $branchList[$random_keys1]["_id"];
+            $attributes = [
                'name' => $shiftListName[$i],
                'shop_id' =>mongo_id($shop_id),
               // 'branch_ids' => $branch_id,
@@ -508,20 +509,20 @@ class GeneralController extends Controller
                'shift_key' => $shiftListName[$i],
                'assignments' => $assignments,
            ];
-           $shift = $this->shiftRepository->create($attributes);
-           $shiftList[]=$shift;
-           //Tạo ca cho từng nhân viên
-           //Tạo ca trong 1 năm
+            $shift = $this->shiftRepository->create($attributes);
+            $shiftList[]=$shift;
+            //Tạo ca cho từng nhân viên
+            //Tạo ca trong 1 năm
            
-           $work_date_begin = Carbon::now()->startofYear();
-           $work_date_end = Carbon::now()->endOfYear();
-           //Khoảng thờI gian khởi tạo ca
-           $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
-           foreach ($userList as $user) {
-               foreach ($work_date as $day) {
-                   $dayOfWeek = $day->dayOfWeek;
-                   $user_id = $user['id'];
-                   $weekMap = [
+            $work_date_begin = Carbon::now()->startofYear();
+            $work_date_end = Carbon::now()->endOfYear();
+            //Khoảng thờI gian khởi tạo ca
+            $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
+            foreach ($userList as $user) {
+                foreach ($work_date as $day) {
+                    $dayOfWeek = $day->dayOfWeek;
+                    $user_id = $user['id'];
+                    $weekMap = [
                        0 => 'SUN',
                        1 => 'MON',
                        2 => 'TUE',
@@ -530,8 +531,8 @@ class GeneralController extends Controller
                        5 => 'FRI',
                        6 => 'SAT',
                    ];
-                   if ($assignments[$dayOfWeek]) {
-                       $attributes = [
+                    if ($assignments[$dayOfWeek]) {
+                        $attributes = [
                            'shift_name' => $shiftListName[$i],
                            'user_id' => mongo_id($user_id),
                            'shift_id' => mongo_id($shiftList[$i]["_id"]),
@@ -545,60 +546,56 @@ class GeneralController extends Controller
                            'status' => -1,
                            'dayOfWeek' => $weekMap[$dayOfWeek]
                        ];
-                       $empShift=$this->empshiftRepository->create($attributes);
-                   }
-               }
-           }
-       }
-       //Fake Wifi bỏ phần này
-      // $listNameWife =['Wifi Company','Wifi School'];
-       //$listSsid =['My Company','My School'];
-      // for ($i=0; $i <2 ; $i++) { 
-           //$random_keys=array_rand($depList);
-          // $dep_id = $depList[$random_keys]["_id"];
-          // $branch_id =$depList[$random_keys]["branch_id"];
-          // $attributes = [
-               //'name' => $listNameWife[$i],
-              // 'bssid' => '44:fb:5a:91:d5:7a',
-              // 'ssid' => $listSsid[$i],
-              // 'branch_id' => $branch_id,
-              // 'dep_id' => $dep_id,
-              // 'shop_id' => $shop_id
-           //];
-          // $wifi = $this->wifiConfigRepository->create($attributes);
-           //$wifiList[]=$wifi;
-      //}
+                        $empShift=$this->empshiftRepository->create($attributes);
+                    }
+                }
+            }
+        }
+        //Fake Wifi bỏ phần này
+        // $listNameWife =['Wifi Company','Wifi School'];
+        //$listSsid =['My Company','My School'];
+        // for ($i=0; $i <2 ; $i++) {
+        //$random_keys=array_rand($depList);
+        // $dep_id = $depList[$random_keys]["_id"];
+        // $branch_id =$depList[$random_keys]["branch_id"];
+        // $attributes = [
+        //'name' => $listNameWife[$i],
+        // 'bssid' => '44:fb:5a:91:d5:7a',
+        // 'ssid' => $listSsid[$i],
+        // 'branch_id' => $branch_id,
+        // 'dep_id' => $dep_id,
+        // 'shop_id' => $shop_id
+        //];
+        // $wifi = $this->wifiConfigRepository->create($attributes);
+        //$wifiList[]=$wifi;
+        //}
 
 
 
-       //Fake EmpClock ca sáng
-       //shift_id ca sáng
-       $shift_id = $shiftList[0]["_id"];
-       $shift_name = $shiftList[0]["name"];
-       $work_date_begin = Carbon::now()->startofYear();
-       $work_date_end = Carbon::now()->subDay(1);
-       //Khoảng thờI gian khởi tạo ca
-       $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
-       foreach ($userList as $user) {
-           foreach ($work_date as $day) {
-               $dayOfWeek = $day->dayOfWeek;
-               if ($assignments[$dayOfWeek]) {
-                   $time_check = $day->addHour(7)->addMinute(55)->addMinutes(rand(1,20));
-                   $user_id = $user['id'];
-                   $user_name =$user['name'];
-                   $emp_shift = Empshift::where('user_id','=',mongo_id($user_id))->where('shift_id','=',mongo_id($shift_id))->where('working_date','<=',$day)->get();
-                   //Các biến random
-                   $late_check_in = rand(1,600);
-                   $soon_check_out = rand(1,600);
-                   $real_working_hours =14400- ($late_check_in +  $soon_check_out );
-                   
-                   $i = count($emp_shift,COUNT_NORMAL);
-                   $working_date = $emp_shift[$i-1]["working_date"];
-                   // dd($working_date);
-                   $emp_shift_id = $emp_shift[$i-1]["_id"];
+        //Fake EmpClock ca sáng
+        //shift_id ca sáng
+        $shift_id = $shiftList[0]["_id"];
+        $shift_name = $shiftList[0]["name"];
+        $work_date_begin = Carbon::now()->startofYear();
+        $work_date_end = Carbon::now()->subDay(1);
+        //Khoảng thờI gian khởi tạo ca
+        $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
+        foreach ($userList as $user) {
+            foreach ($work_date as $day) {
+                $dayOfWeek = $day->dayOfWeek;
+                if ($assignments[$dayOfWeek]) {
+                    $time_check = $day->addHour(7)->addMinute(55)->addMinutes(rand(1, 17));
+                    $user_id = $user['id'];
+                    $user_name =$user['name'];
+                    $emp_shift = Empshift::where('user_id', '=', mongo_id($user_id))->where('shift_id', '=', mongo_id($shift_id))->where('working_date', '<=', $day)->get();
+       
+                    $i = count($emp_shift, COUNT_NORMAL);
+                    $working_date = $emp_shift[$i-1]["working_date"];
+                    // dd($working_date);
+                    $emp_shift_id = $emp_shift[$i-1]["_id"];
                   
-                   //History check in
-                   $data = [
+                    //History check in
+                    $data = [
                        'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
@@ -611,21 +608,21 @@ class GeneralController extends Controller
                        'timekeep_config' => $timekeepConfigList,
                        'type' => 'check_in'
                    ];
-                   $emp_history = $this->historyRepository->create($data);
-                   //dd($emp_history);
+                    $emp_history = $this->historyRepository->create($data);
+                    //dd($emp_history);
                   
-                   //Emp_shift update checkin_time
-                   $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
-                   ->where('shift_id','=',mongo_id($shift_id))
+                    //Emp_shift update checkin_time
+                    $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
+                   ->where('shift_id', '=', mongo_id($shift_id))
                    ->where('working_date', '=', $working_date)->first();
-                   $attribute2 = [
+                    $attribute2 = [
                        'checkin_time' =>$time_check,
                        'status' => 0,
                    ];
-                   $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
-                   //dd($empShift_1);
-                   //EmpClock check in
-                   $attribute = [
+                    $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
+                    //dd($empShift_1);
+                    //EmpClock check in
+                    $attribute = [
                        'user_id' => mongo_id($user_id),
                        'emp_shift_id' => mongo_id($emp_shift_id),
                        'shift_id' => mongo_id($shift_id),
@@ -635,25 +632,38 @@ class GeneralController extends Controller
                        'isCheckOut' => false,
                    ];
                    
-                   //EmpClock check out
-                   $emp_clock = $this->empclockRepository->create($attribute);
-                   $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
-                   $attribute1 = [
-                       'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,20)),
+                    //EmpClock check out
+                    $emp_clock = $this->empclockRepository->create($attribute);
+                    $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
+                    $attribute1 = [
+                       'time_out' => $time_check->addHour(3)->addMinutes(45)->addMinutes(rand(7,10)),
                        'status' => 0,
                        'isCheckOut' => true,
                    ];
-                   $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
                     //Emp_shift update checkin_time
                     $attribute3 = [
                         'checkout_time' => $time_check,
                         'status' => 1,
                     ];
                     $empShift_2=$this->empshiftRepository->update($attribute3, $listEmpShift->_id);
+                    //tinh late, soon and working hours
+                    $checkin_time = $empShift_2->checkin_time;
+                    $time_begin = $empShift_2->working_date->addHour(8);
+                    $late_check_in = $checkin_time->diffInSeconds($time_begin);
+                    if ($late_check_in <0) {
+                        $late_check_in = 0;
+                    }
+                    $checkout_time = $empShift_2->checkout_time;
+                    $time_end = $empShift_2->working_date->addHour(12);
+                    $soon_check_out = $time_end->diffInSeconds($checkout_time);
+                    if ($soon_check_out <0) {
+                        $late_check_in = 0;
+                    }
+                    $real_working_hours =14400- ($late_check_in +  $soon_check_out);
 
-
-                   //History check out
-                   $data1 = [
+                    //History check out
+                    $data1 = [
                        'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
@@ -670,36 +680,32 @@ class GeneralController extends Controller
                        'month' =>$day->month,
                        'year' =>$day->year,
                    ];
-                   $emp_history = $this->historyRepository->create($data1);
-                   //djson($emp_history);
-               }
-           }
-       }
+                    $emp_history = $this->historyRepository->create($data1);
+                    //djson($emp_history);
+                }
+            }
+        }
 
-       //Fake EmpClock ca chiều
-       //shift_id Ca chiều
-       $shift_id1 = $shiftList[1]["_id"];
-       $shift_name1 = $shiftList[1]["name"];
-       foreach ($userList as $user) {
-           foreach ($work_date as $day) {
-               $dayOfWeek = $day->dayOfWeek;
-               if ($assignments[$dayOfWeek]) {
-                   $time_check = $day->addHours(13)->addMinute(25)->addMinutes(rand(1,20));
-                   //dd($time_check);
-                   $user_id = $user['id'];
-                   $user_name =$user['name'];
-                   $emp_shift = Empshift::where('user_id','=',mongo_id($user_id))->where('shift_id','=',mongo_id($shift_id1))->where('working_date','<=',$day)->get();
-                   //Các biến random
-                   $late_check_in = rand(1,600);
-                   $soon_check_out = rand(1,600);
-                   $real_working_hours =14400- ($late_check_in +  $soon_check_out );
+        //Fake EmpClock ca chiều
+        //shift_id Ca chiều
+        $shift_id1 = $shiftList[1]["_id"];
+        $shift_name1 = $shiftList[1]["name"];
+        foreach ($userList as $user) {
+            foreach ($work_date as $day) {
+                $dayOfWeek = $day->dayOfWeek;
+                if ($assignments[$dayOfWeek]) {
+                    $time_check = $day->addHours(13)->addMinute(25)->addMinutes(rand(1, 17));
+                    //dd($time_check);
+                    $user_id = $user['id'];
+                    $user_name =$user['name'];
+                    $emp_shift = Empshift::where('user_id', '=', mongo_id($user_id))->where('shift_id', '=', mongo_id($shift_id1))->where('working_date', '<=', $day)->get();
 
-                   $i = count($emp_shift,COUNT_NORMAL);
-                   $working_date = $emp_shift[$i-1]["working_date"];
-                   // dd($working_date);
-                   $emp_shift_id = $emp_shift[$i-1]["_id"];
-                   //History check in
-                   $data = [
+                    $i = count($emp_shift, COUNT_NORMAL);
+                    $working_date = $emp_shift[$i-1]["working_date"];
+                    // dd($working_date);
+                    $emp_shift_id = $emp_shift[$i-1]["_id"];
+                    //History check in
+                    $data = [
                        'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
@@ -712,18 +718,18 @@ class GeneralController extends Controller
                        'timekeep_config' => $timekeepConfigList,
                        'type' => 'check_in'
                    ];
-                   $emp_history = $this->historyRepository->create($data);
-                     //Emp_shift update checkin_time
-                   $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
-                   ->where('shift_id','=',mongo_id($shift_id1))
+                    $emp_history = $this->historyRepository->create($data);
+                    //Emp_shift update checkin_time
+                    $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
+                   ->where('shift_id', '=', mongo_id($shift_id1))
                    ->where('working_date', '=', $working_date)->first();
-                   $attribute2 = [
+                    $attribute2 = [
                        'checkin_time' => $time_check,
                        'status' => 0,
                    ];
-                   $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
-                   //EmpClock check in
-                   $attribute = [
+                    $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
+                    //EmpClock check in
+                    $attribute = [
                        'user_id' => mongo_id($user_id),
                        'emp_shift_id' => mongo_id($emp_shift_id),
                        'shift_id' => mongo_id($shift_id1),
@@ -732,15 +738,15 @@ class GeneralController extends Controller
                        'status' => 1,
                        'isCheckOut' => false,
                    ];
-                   //EmpClock check out
-                   $emp_clock = $this->empclockRepository->create($attribute);
-                   $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
-                   $attribute1 = [
-                       'time_out' => $time_check->addHour(4)->addMinutes(5)->subMinutes(rand(1,30)),
+                    //EmpClock check out
+                    $emp_clock = $this->empclockRepository->create($attribute);
+                    $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
+                    $attribute1 = [
+                       'time_out' => $time_check->addHour(3)->addMinutes(45)->addMinutes(rand(7,10)),
                        'status' => 0,
                        'isCheckOut' => true,
                    ];
-                   $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
 
                     //Emp_shift update checkin_time
                     $attribute3 = [
@@ -748,8 +754,25 @@ class GeneralController extends Controller
                         'status' => 1,
                     ];
                     $empShift_2=$this->empshiftRepository->update($attribute3, $listEmpShift->_id);
-                   //History check out
-                   $data1 = [
+
+                     //tinh late, soon and working hours
+                     $checkin_time = $empShift_2->checkin_time;
+                     $time_begin = $empShift_2->working_date->addHours(13)->addMinute(30);
+                     $late_check_in = $checkin_time->diffInSeconds($time_begin);
+                     if ($late_check_in <0) {
+                         $late_check_in = 0;
+                     }
+                     $checkout_time = $empShift_2->checkout_time;
+                     $time_end = $empShift_2->working_date->addHours(17)->addMinute(30);
+                     $soon_check_out = $time_end->diffInSeconds($checkout_time);
+                     if ($soon_check_out <0) {
+                         $late_check_in = 0;
+                     }
+                     $real_working_hours =14400- ($late_check_in +  $soon_check_out);
+      
+
+                    //History check out
+                    $data1 = [
                        'user_id' => mongo_id($user_id),
                        'user_name' => $user_name,
                        'working_date' => $working_date,
@@ -766,11 +789,10 @@ class GeneralController extends Controller
                        'month' =>$day->month,
                        'year' =>$day->year,
                    ];
-                   $emp_history = $this->historyRepository->create($data1);
-               }
-           }
-       }
-       return $this->successRequest('Fake dữ liệu thành công!!');
-      
-   }//end Fake data
- }
+                    $emp_history = $this->historyRepository->create($data1);
+                }
+            }
+        }
+        return $this->successRequest('Fake dữ liệu thành công!!');
+    }//end Fake data
+}
