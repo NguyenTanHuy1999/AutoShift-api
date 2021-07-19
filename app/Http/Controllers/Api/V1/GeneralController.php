@@ -299,9 +299,10 @@ class GeneralController extends Controller
                     'shift_id' => $listChecks->shift_id,
                     'shift_name' => $listChecks->shift_name,
                     'shift_time' => $listChecks->shift_time,
-                    'late_check_in' => $listChecks->late_check_in
+                    'late_check_in' => $listChecks->late_check_in,
+                    'value' => $listChecks->late_check_in
                 ];
-                $list_late_soon[]=$data_late_check_in;
+                $list_late_soon[] = $data_late_check_in;
             }
             if (($listChecks->soon_check_out)>600) {
                 $data_soon_check_out = [
@@ -311,12 +312,15 @@ class GeneralController extends Controller
                     'shift_id' => $listChecks->shift_id,
                     'shift_name' => $listChecks->shift_name,
                     'shift_time' => $listChecks->shift_time,
-                    'soon_check_out' => $listChecks->soon_check_out
+                    'soon_check_out' => $listChecks->soon_check_out,
+                    'value' => $listChecks->soon_check_out
                 ];
-                $list_late_soon[]=$data_soon_check_out;
+                $list_late_soon[] = $data_soon_check_out;
             }
         }
-        return $this->successRequest($list_late_soon);
+        usort($list_late_soon, fn ($a, $b) => $a['value'] > $b['value']);
+        $top5emp = array_slice(array_reverse($list_late_soon), 0, 5);
+        return $this->successRequest($top5emp);
     }
 
     public function fakedata()
