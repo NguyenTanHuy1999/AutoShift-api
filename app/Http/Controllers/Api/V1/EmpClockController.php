@@ -3,7 +3,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-
 use Carbon\Carbon;
 use App\Api\Repositories\Contracts\EmpClockRepository;
 use App\Api\Repositories\Contracts\TimekeepConfigRepository;
@@ -74,11 +73,11 @@ class EmpClockController extends Controller
        // $wifi_query = [];
 
         //if (!empty($branch_id)) {
-            //$wifi_query['branch_id'] = $branch_id;
+        //$wifi_query['branch_id'] = $branch_id;
         //}
 
         //if (!empty($dep_id)) {
-       //     $wifi_query['dep_id'] = $dep_id;
+        //     $wifi_query['dep_id'] = $dep_id;
         //}
 
         //$wifi_config = WifiConfig::where($wifi_query)->get();
@@ -87,60 +86,65 @@ class EmpClockController extends Controller
         //    foreach ($wifi_config as $wifi) {
 
         //        $wifi_clocking[] = $wifi->transform();
-       //     }
-       // }
+        //     }
+        // }
         
-       //timkeep lấy từ client 
+        //timkeep lấy từ client
         $timekeep_client = $this->request->get('timekeep');
-       //lấy thông tin timekeep_config từ database
-        $timekeep_config = TimekeepConfig::where('shop_id','=',$user->shop_id)->first();
-        $timekeep_config_db_wifi_bssid = $timekeep_config['wifi']['bssid'];
-        $timekeep_config_db_long = $timekeep_config['location']['long'];
-        $timekeep_config_db_lat = $timekeep_config['location']['lat'];
+        //lấy thông tin timekeep_config từ database
+        $timekeep_config = TimekeepConfig::where('shop_id', '=', $user->shop_id)->first();
+        
         $timekeep_config_db_wifi_require = $timekeep_config['wifi']['require'];
         $timekeep_config_db_location_require = $timekeep_config['location']['require'];
-        //thông tin timekeep_config từ client trả về 
-        $timekeep_client_wifi_bssid = $timekeep_client['wifi']['bssid'];
-        $timekeep_client_long = $timekeep_client['location']['long'];
-        $timekeep_client_lat = $timekeep_client['location']['lat'];
-
-        //xử lý validate timekeep_config
-        if ($timekeep_config_db_wifi_require) {
-            if($timekeep_client_wifi_bssid != $timekeep_config_db_wifi_bssid){
-                return $this->errorBadRequest('Wifi kết nối không phù hợp');
-            }
-        }else{
-            return $this->errorBadRequest('require');
-        }
+        
         
         //khoảng cách từ điểm cố định đến điểm client trả về
-        
-        $distance = distance($timekeep_config_db_lat,$timekeep_config_db_long,$timekeep_client_lat,$timekeep_client_long);
         if ($timekeep_config_db_location_require) {
-            if($distance >100){
+            $timekeep_config_db_long = $timekeep_config['location']['long'];
+            $timekeep_config_db_lat = $timekeep_config['location']['lat'];
+            $timekeep_client_long = $timekeep_client['location']['long'];
+            $timekeep_client_lat = $timekeep_client['location']['lat'];
+            $distance = distance($timekeep_config_db_lat, $timekeep_config_db_long, $timekeep_client_lat, $timekeep_client_long);
+            if ($distance >100) {
                 return $this->errorBadRequest('Bạn đang ở quá xa vị trí chấm công');
+            } else {
+                $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
+                ->where(['user_id' => mongo_id($user_id)])
+                ->get();
+
+                $data = [];
+                foreach ($emp_shifts as $emp_shift) {
+                    $data[] = $emp_shift->transform();
+                }
+                return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
             }
-        }else{
-            return $this->errorBadRequest('require');
         }
-        
-
-        $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
-            ->where(['user_id' => $user_id])
-            ->get();
-
-        $data = [];
-        foreach ($emp_shifts as $emp_shift) {
-            $data[] = $emp_shift->transform();
+        //xử lý validate timekeep_config
+        if ($timekeep_config_db_wifi_require) {
+            //thông tin timekeep_config từ client trả về
+            $timekeep_config_db_wifi_bssid = $timekeep_config['wifi']['bssid'];
+            $timekeep_client_wifi_bssid = $timekeep_client['wifi']['bssid'];
+            if ($timekeep_client_wifi_bssid != $timekeep_config_db_wifi_bssid) {
+                return $this->errorBadRequest('Wifi kết nối không phù hợp');
+            } else {
+                $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
+                ->where(['user_id' => mongo_id($user_id)])
+                ->get();
+    
+                $data = [];
+                foreach ($emp_shifts as $emp_shift) {
+                    $data[] = $emp_shift->transform();
+                }
+                return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
+            }
         }
-        return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
     }
 
 
 
 
 
-    public function  clock()
+    public function clock()
     {
         //        Log::debug('test0');
         $user = $this->user();
@@ -226,7 +230,7 @@ class EmpClockController extends Controller
             $shift_time = null;
             $time_begin = null;
             $time_end =null;
-             //Lấy ca để chấm        
+            //Lấy ca để chấm
             $emp_shift = Empshift::where(['_id' => mongo_id($emp_shift_id)])->first();
 
 
@@ -242,7 +246,7 @@ class EmpClockController extends Controller
             }
 
 
-            //Ra ca 
+            //Ra ca
             $attribute = [
                 'time_out' => $now,
                 'status' => $status,
