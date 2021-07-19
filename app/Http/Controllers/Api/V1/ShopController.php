@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Api\Repositories\Contracts\UserRepository;
 use App\Api\Repositories\Contracts\ShopRepository;
-
+use App\Api\Repositories\Contracts\TimekeepConfigRepository;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,6 +13,7 @@ use Illuminate\Auth\AuthManager;
 use Gma\Curl;
 use App\Api\Entities\Shop;
 use App\Api\Entities\User;
+use App\Api\Entities\TimekeepConfig;
 
 //Google firebase
 use Kreait\Firebase\Factory;
@@ -32,6 +33,7 @@ class ShopController extends Controller
      * @var ShopRepository
      */
     protected $shopRepository;
+    protected $timekeepConfigRepository;
 
     protected $auth;
 
@@ -40,10 +42,13 @@ class ShopController extends Controller
     public function __construct(
         UserRepository $userRepository,
         ShopRepository $shopRepository,
+        TimekeepConfigRepository $timekeepConfigRepository,
+        
         AuthManager $auth,
         Request $request
     ) {
         $this->userRepository = $userRepository;
+        $this->timekeepConfigRepository = $timekeepConfigRepository;
         $this->shopRepository = $shopRepository;
         $this->request = $request;
         $this->auth = $auth;
@@ -100,11 +105,34 @@ class ShopController extends Controller
             'dep_id' => null,
             'basic_salary' =>null,
             'is_root' => 1,
+            'is_admin' =>1,
             'sex' => null,
-            'name' => 'admin',
+            'name' => 'Root',
             'phone_number' => $this->request->get('phone_number')
         ];
         $user = $this->userRepository->create($userAttributes);
+
+        $wifi = [
+            'ssid' =>null,
+            'bssid' =>null,
+            'require' =>false
+        ];
+        $location =[
+            'long' =>null,
+            'lat' =>null,
+            'address' =>null,
+            'require' =>false
+        ];
+        $attributes = [
+            'wifi' =>$wifi,
+            'location' =>$location,
+            'imageRequire' =>null,
+            'shop_id' =>mongo_id($shop->_id)
+        ];
+
+        $timekeepConfig = $this->timekeepConfigRepository->create($attributes);
+
+
         //Gán token vào user
         $token = $this->auth->fromUser($user);
         $userTrans = $user->transform();

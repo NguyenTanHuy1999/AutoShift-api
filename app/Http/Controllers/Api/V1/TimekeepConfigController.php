@@ -112,7 +112,7 @@ class TimekeepConfigController extends Controller
         $validator = \Validator::make($this->request->all(), [
             'wifi' =>'required',
             'location' => 'required',
-            'imageRequire' =>'required',
+            'imageRequire' =>'nullable',
             'id' => 'required'
         ]);
         if ($validator->fails()) {
