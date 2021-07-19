@@ -405,8 +405,8 @@ class GeneralController extends Controller
        $timekeep_name = 'Home';
        $timekeep_ssid = 'My Huyen';
        $timekeep_bssid = '44:fb:5a:91:d5:7a';
-       $timekeep_lat ='10.523153';
-       $timekeep_long = '106.716475';
+       $timekeep_long ='10.523153';
+       $timekeep_lat = '106.716475';
        $timekeep_address = 'Long An';
        $timekeep_imageRequire = 'false';
 
@@ -538,10 +538,10 @@ class GeneralController extends Controller
                            'time_end' => $listTimeEnd[$i],
                            'checkin_time' => null,
                            'checkout_time' => null,
+                           'status' => -1,
                            'dayOfWeek' => $weekMap[$dayOfWeek]
                        ];
                        $empShift=$this->empshiftRepository->create($attributes);
-                       $empShiftList[]=$empShift;
                    }
                }
            }
@@ -609,6 +609,17 @@ class GeneralController extends Controller
                    ];
                    $emp_history = $this->historyRepository->create($data);
                    //dd($emp_history);
+                  
+                   //Emp_shift update checkin_time
+                   $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
+                   ->where('shift_id','=',mongo_id($shift_id))
+                   ->where('working_date', '=', $working_date)->first();
+                   $attribute2 = [
+                       'checkin_time' =>$time_check,
+                       'status' => 0,
+                   ];
+                   $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
+                   //dd($empShift_1);
                    //EmpClock check in
                    $attribute = [
                        'user_id' => mongo_id($user_id),
@@ -619,6 +630,7 @@ class GeneralController extends Controller
                        'status' => 1,
                        'isCheckOut' => false,
                    ];
+                   
                    //EmpClock check out
                    $emp_clock = $this->empclockRepository->create($attribute);
                    $clock_check =EmpClock::where(['user_id' => mongo_id($user_id),'isCheckOut' => false])->first();
@@ -628,6 +640,14 @@ class GeneralController extends Controller
                        'isCheckOut' => true,
                    ];
                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+                    //Emp_shift update checkin_time
+                    $attribute3 = [
+                        'checkout_time' => $time_check,
+                        'status' => 1,
+                    ];
+                    $empShift_2=$this->empshiftRepository->update($attribute3, $listEmpShift->_id);
+
+
                    //History check out
                    $data1 = [
                        'user_id' => mongo_id($user_id),
@@ -689,7 +709,15 @@ class GeneralController extends Controller
                        'type' => 'check_in'
                    ];
                    $emp_history = $this->historyRepository->create($data);
-       
+                     //Emp_shift update checkin_time
+                   $listEmpShift = Empshift::where('user_id', '=', mongo_id($user_id))
+                   ->where('shift_id','=',mongo_id($shift_id1))
+                   ->where('working_date', '=', $working_date)->first();
+                   $attribute2 = [
+                       'checkin_time' => $time_check,
+                       'status' => 0,
+                   ];
+                   $empShift_1=$this->empshiftRepository->update($attribute2, $listEmpShift->_id);
                    //EmpClock check in
                    $attribute = [
                        'user_id' => mongo_id($user_id),
@@ -709,6 +737,13 @@ class GeneralController extends Controller
                        'isCheckOut' => true,
                    ];
                    $emp_clock1 = $this->empclockRepository->update($attribute1, $clock_check->_id);
+
+                    //Emp_shift update checkin_time
+                    $attribute3 = [
+                        'checkout_time' => $time_check,
+                        'status' => 1,
+                    ];
+                    $empShift_2=$this->empshiftRepository->update($attribute3, $listEmpShift->_id);
                    //History check out
                    $data1 = [
                        'user_id' => mongo_id($user_id),
