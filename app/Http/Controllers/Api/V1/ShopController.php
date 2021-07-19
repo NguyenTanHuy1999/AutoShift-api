@@ -121,6 +121,7 @@ class ShopController extends Controller
             'long' =>null,
             'lat' =>null,
             'address' =>null,
+            'r' =>500,
             'require' =>false
         ];
         $attributes = [

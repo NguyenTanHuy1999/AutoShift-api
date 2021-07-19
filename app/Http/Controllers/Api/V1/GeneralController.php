@@ -291,7 +291,7 @@ class GeneralController extends Controller
         $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
         $list_late_soon = [];
         foreach ($listCheckOut as $listChecks) {
-            if (($listChecks->late_check_in)>750) {
+            if (($listChecks->late_check_in)>600) {
                 $data_late_check_in = [
                     'type' => 'late_check_in',
                     'user_id' => $listChecks->user_id,
@@ -303,7 +303,7 @@ class GeneralController extends Controller
                 ];
                 $list_late_soon[]=$data_late_check_in;
             }
-            if (($listChecks->soon_check_out)>750) {
+            if (($listChecks->soon_check_out)>600) {
                 $data_soon_check_out = [
                     'type' => 'soon_check_out',
                     'user_id' => $listChecks->user_id,
@@ -422,6 +422,7 @@ class GeneralController extends Controller
            'long' =>$timekeep_long,
            'lat' => $timekeep_lat,
            'address' =>$timekeep_address,
+           'r' =>500,
            'require' =>true
        ];
 
