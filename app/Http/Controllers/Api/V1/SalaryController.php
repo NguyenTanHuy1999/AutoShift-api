@@ -67,6 +67,17 @@ class SalaryController extends Controller
     //Create Salary
     public function createSalary() //truyen vao 2 bien from_date and to_date
     {
+        // Validate Data import.
+        $validator = \Validator::make($this->request->all(), [
+            'month_date' => 'required',
+            'limit_late_in' => 'required',
+            'limit_soon_out' => 'required',
+            'minute_sub' => 'required',
+            'minute_sub_value' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return $this->errorBadRequest($validator->messages()->toArray());
+        }
 
         $user = $this->user();
         $shop_id = $user->shop_id;
@@ -80,148 +91,72 @@ class SalaryController extends Controller
                 $list_user[] = $user->transform();
             }
         }
-        $data_month_clone = Carbon::parse($this->request->get('month_date'));
+
+        //Các thông tin lấy từ client
+        $limit_late_in = (int)$this->request->get('limit_late_in'); //phút
+        $limit_soon_out = (int)$this->request->get('limit_soon_out');//phút
+        $minute_sub = (int)$this->request->get('minute_sub');//phút
+        $minute_sub_value = (int)$this->request->get('minute_sub_value'); //vnđ
+        $data_month_clone = Carbon::parse($this->request->get('month_date')); //lấy tháng từ client
         $month_date = Carbon::parse($this->request->get('month_date'));
+
+
         $from_date = $month_date->startOfMonth();
         $to_date = $data_month_clone->endOfMonth();
         $month = $month_date->month;
         $year = $month_date->year;
-        $salary_check = Salary::where(['shop_id' => $shop_id, 'month' => $month, 'year' => $year])->first();
+        $salary_check = Salary::where(['shop_id' => mongo_id($shop_id), 'month' => $month, 'year' => $year])->first();
         if (!empty($salary_check)) {
             return $this->errorBadRequest('Lương tháng này đã được tạo');
         }
         for ($i = 0; $i < count($list_user, COUNT_NORMAL); $i++) {
             $user_id = ($list_user[$i]["id"]);
-            //Tổng số ca trong tháng(do 1 ngày có 2 ca nên chia 2)
-            $listEmpShift = Empshift::where('user_id', '=', $user_id)->where('working_date', '>=', $from_date)->where('working_date', '<=', $to_date)->get();
-            $total_work_read = count($listEmpShift, COUNT_NORMAL) / 2;
-            //Lấy lịch sử chấm công của user
-            $listHistory = History::where(['user_id' => $user_id, 'type' => 'check_out', 'month' => $month, 'year' => $year])->get();
+            //Tổng số ca theo kê hoạch của tháng chỉ tính ca "OT = 0"
+            $total_work_day_plan =null;
+            $listEmpShift_plan = Empshift::where('user_id', '=', mongo_id($user_id))->where('working_date', '>=', $from_date)
+            ->where('working_date', '<=', $to_date)->where('is_OT', '=', 0)->get();
+            foreach ($listEmpShift_plan as $emp_shift) {
+                $total_work_day_plan = $total_work_day_plan + $emp_shift->work_day;
+            }
+           
+            //Tổng số ca làm được tính luôn cả ca OT nếu có
             $total_work_time = 0;
             $total_work_day = 0;
             $total_late_check_in = 0;
             $total_soon_check_out = 0;
-            for ($j = 0; $j < count($listHistory, COUNT_NORMAL); $j++) {
-                $total_work_time = $total_work_time + ($listHistory[$j]["real_working_hours"]);
-                $total_work_day = $total_work_day + 0.5;
-                $total_late_check_in = $total_late_check_in + ($listHistory[$j]["late_check_in"]);
-                $total_soon_check_out = $total_soon_check_out + ($listHistory[$j]["soon_check_out"]);
+
+            $listEmpShift_real = Empshift::where('user_id', '=', mongo_id($user_id))->where('working_date', '>=', $from_date)
+            ->where('working_date', '<=', $to_date)->where('status', '=', 1)->where('late_check_in', '<=', $limit_late_in*60)->
+            where('soon_check_out', '<=', $limit_soon_out*60)->get();
+            foreach ($listEmpShift_real as $emp_shift) {
+                $total_work_day = $total_work_day + $emp_shift->work_day;
+                $total_work_time = $total_work_time + $emp_shift->real_working_hours;
+                $total_late_check_in = $total_late_check_in + $emp_shift->late_check_in;
+                $total_soon_check_out = $total_soon_check_out + $emp_shift->soon_check_out;
             }
-            //Điều kiển trừ lương 
-            $total_time_late = $total_late_check_in + $total_soon_check_out;
-            $time_condition1 = 18*60*$total_work_read; //trễ hơn 18 phút  1 ngày
-            $time_condition2 = 19*60*$total_work_read;// trễn hơn 19 phút 1 ngày
-            $time_condition3 = 20*60*$total_work_read;// trễn hơn 20 phút 1 ngày
-            $time_condition4 = 21*60*$total_work_read;// trễn hơn 21 phút 1 ngày
-            $time_condition5 = 22*60*$total_work_read;// trễn hơn 22 phút 1 ngày
             //Tính lương theo điều kiện đưa ra
-            if($total_time_late <= $time_condition1){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read);
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
+            $total_late_soon = $total_late_check_in + $total_soon_check_out;
+            $basic_salary = $list_user[$i]["basic_salary"];
+            $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan)-(($total_late_soon/60/$minute_sub)*$minute_sub_value);
+            $data = [
+                    'user_id' => mongo_id($user_id),
+                    'shop_id' => mongo_id($shop_id),
                     'user_info' =>$list_user[$i],
                     'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
+                    'total_work_day_plan' => $total_work_day_plan,
+                    'total_work_day_real' => $total_work_day,
                     'total_late_check_in' => $total_late_check_in,
                     'total_soon_check_out' => $total_soon_check_out,
                     'month' => $month,
                     'year' => $year,
                     'real_salary' => $real_salary
                 ];
-                $emp_salary = $this->salaryRepository->create($data); 
-            }
-            if(($total_time_late > $time_condition1) && ($total_time_late <=$time_condition2)){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-100000;  
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }
-            if(($total_time_late > $time_condition2) && ($total_time_late <=$time_condition3)){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-200000;  
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }
-            if(($total_time_late > $time_condition3) && ($total_time_late <=$time_condition4)){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-300000;    
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }
-            if(($total_time_late > $time_condition4) && ($total_time_late <=$time_condition5)){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-400000;    
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }
-            if($total_time_late > $time_condition5){
-                $basic_salary = $list_user[$i]["basic_salary"];
-                $real_salary = $basic_salary * ($total_work_day / $total_work_read)-500000;   
-                $data = [
-                    'user_id' => $user_id,
-                    'shop_id' => $shop_id,
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }
+            $emp_salary = $this->salaryRepository->create($data);
         }
         return $this->successRequest($emp_salary->transform());
     }
     //View Salary
-    public  function viewSalary() //xem luong theo thang
+    public function viewSalary() //xem luong theo thang
     {
         // chon thang va nam can xem
         $month = (int)($this->request->get('month'));
@@ -233,13 +168,18 @@ class SalaryController extends Controller
         $listUser = User::where(['shop_id' => $shop_id])->get();
         foreach ($listUser as $users) {
             $user_id = $users->_id;
-            $emp_salarys = Salary::where(['user_id' => $user_id, 'month' => $month, 'year' => $year])->first();
-            $emp_sal[] = $emp_salarys;
+            $emp_salarys = Salary::where(['user_id' => mongo_id($user_id), 'month' => $month, 'year' => $year])->first();
+            if(empty($emp_salarys)){
+                $emp_sal = [];
+            }else{
+                $emp_sal[] = $emp_salarys;
+            }
+            
         }
         return $this->successRequest($emp_sal);
     }
     //Thống kê
-    public  function viewTimeStatistics() // thống kê trong 1 ngày
+    public function viewTimeStatistics() // thống kê trong 1 ngày
     {
         //Chọn ngày cần xem thống kê
         $date = Carbon::parse($this->request->get('date'));
