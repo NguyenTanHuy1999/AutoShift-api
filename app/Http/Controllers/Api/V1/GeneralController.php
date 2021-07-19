@@ -662,6 +662,15 @@ class GeneralController extends Controller
                     }
                     $real_working_hours =14400- ($late_check_in +  $soon_check_out);
 
+                     //update emp_shift cuối cùng
+
+                     $attribute4 = [
+                        'real_working_hours'=>$real_working_hours,
+                        'late_check_in' =>$late_check_in,
+                        'soon_check_out' =>$soon_check_out
+                    ];
+                    $empShift_3=$this->empshiftRepository->update($attribute4, $listEmpShift->_id);
+
                     //History check out
                     $data1 = [
                        'user_id' => mongo_id($user_id),
@@ -768,9 +777,17 @@ class GeneralController extends Controller
                      if ($soon_check_out <0) {
                          $late_check_in = 0;
                      }
-                     $real_working_hours =14400- ($late_check_in +  $soon_check_out);
-      
+                    $real_working_hours =14400- ($late_check_in +  $soon_check_out);
+                    
+                    //update emp_shift cuối cùng
 
+                    $attribute4 = [
+                        'real_working_hours'=>$real_working_hours,
+                        'late_check_in' =>$late_check_in,
+                        'soon_check_out' =>$soon_check_out
+                    ];
+                    $empShift_3=$this->empshiftRepository->update($attribute4, $listEmpShift->_id);
+                    
                     //History check out
                     $data1 = [
                        'user_id' => mongo_id($user_id),
