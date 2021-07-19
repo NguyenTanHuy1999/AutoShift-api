@@ -432,7 +432,7 @@ class GeneralController extends Controller
        //    return $this->errorBadRequest('Timekeep_config đã được sử dụng');
        //}
        $attributes = [
-           'name' => $timekeep_name,
+           //'name' => $timekeep_name,
            'wifi' =>$wifi,
            'location' =>$location,
            'imageRequire' =>$timekeep_imageRequire,
@@ -503,6 +503,8 @@ class GeneralController extends Controller
                //'dep_ids' => $dep_id,
                'time_begin' => $listTimeBegin[$i],
                'time_end' => $listTimeEnd[$i],
+               'work_day' => 0.5,
+               'is_OT' => 0,
                'shift_key' => $shiftListName[$i],
                'assignments' => $assignments,
            ];
@@ -536,6 +538,8 @@ class GeneralController extends Controller
                            'working_date' => $day,
                            'time_begin' => $listTimeBegin[$i],
                            'time_end' => $listTimeEnd[$i],
+                           'work_day' => 0.5,
+                           'is_OT' => 0,
                            'checkin_time' => null,
                            'checkout_time' => null,
                            'status' => -1,
