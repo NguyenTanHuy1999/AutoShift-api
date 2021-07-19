@@ -82,6 +82,8 @@ class ShiftController extends Controller
             'name' => 'required',
             'assignments' => 'required',
             'shift_key' => 'required',
+            'work_day' => 'required',
+            'is_OT' => 'required',
             'time_begin' => 'required|date_format:H:i',
             'time_end' => 'required|date_format:H:i',
             // 'work_date_begin' => 'required|date_format:Y-m-d',
@@ -94,7 +96,6 @@ class ShiftController extends Controller
 
         //Lấy data
         $shift_key = $this->request->get('shift_key');
-        $shift_check = Shift::where(['shift_key' => $shift_key])->first();
         $dep_ids = $this->request->get('dep_id');
         $branch_ids = $this->request->get('branch_id');
         $position_id = $this->request->get('position_id');
@@ -102,12 +103,13 @@ class ShiftController extends Controller
         $shop_id = $user->shop_id;
         $assignments = $this->request->get('assignments');
         $shift_name = $this->request->get('name');
+        $work_day = $this->request->get('work_day');
+        $is_OT = $this->request->get('is_OT');
 
-
+        $shift_check = Shift::where(['shift_key' => $shift_key,'shop_id' => mongo_id($shop_id)])->first();
         if (!empty($shift_check)) {
             return $this->errorBadRequest('Mã ca đã tồn tại');
         }
-
 
 
 
@@ -115,10 +117,27 @@ class ShiftController extends Controller
         $time_begin = $this->request->get('time_begin');
         $time_end = $this->request->get('time_end');
 
+        //Parse sang carbon
+        $time_begin_client = Carbon::parse($time_begin);
+        $time_end_client = Carbon::parse($time_end);
+        //Check thời gian ca làm có trùng hay không
+        $condition_time_begin =null;
+        $listShift = Shift::where('shop_id','=',$shop_id)->get();
+        foreach ($listShift as $shift) {
 
-        //Tạo ca trong 1 tháng
-        $work_date_begin = Carbon::now();
-        $work_date_end = Carbon::now()->addWeek(2)->endOfWeek();
+            //Check thứ
+            
+            $time_begin_db = Carbon::parse($shift->time_begin);
+            $time_end_db = Carbon::parse($shift->time_end);
+                //so sánh 
+            $condition_time_begin = (($time_begin_client >= $time_begin_db) && ($time_begin_client <= $time_end_db));
+            $condition_time_end = (($time_end_client >= $time_begin_db) && ($time_end_client <= $time_end_db));
+            $condition = $condition_time_begin || $condition_time_end;
+            if(($condition)){
+                return $this->errorBadRequest('Thời gian của ca đã bị trùng');
+            }
+            
+        }
 
         // $depCheck = Dep::where(['_id' => mongo_id($dep_id)])->first();
         // if (empty($depCheck)) {
@@ -136,8 +155,11 @@ class ShiftController extends Controller
             'dep_ids' => $dep_ids,
             'time_begin' => $time_begin,
             'time_end' => $time_end,
+            'work_day' => $work_day,
+            'is_OT' => $is_OT,
             'shift_key' => $shift_key,
             'assignments' => $assignments,
+            
         ];
         $shift = $this->shiftRepository->create($attributes);
 
@@ -145,7 +167,9 @@ class ShiftController extends Controller
         //Lấy danh sách user
         $user_list = User::where((['shop_id' => $shop_id]))->get();
 
-
+        //Tạo ca trong 1 tháng
+        $work_date_begin = Carbon::now();
+        $work_date_end = Carbon::now()->addWeek(2)->endOfWeek();
         //Khoảng thờI gian khởi tạo ca
         $work_date = CarbonPeriod::create($work_date_begin, $work_date_end);
 
@@ -183,8 +207,11 @@ class ShiftController extends Controller
                         'working_date' => $day,
                         'time_begin' => $time_begin,
                         'time_end' => $time_end,
+                        'work_day' => $work_day,
+                        'is_OT' => $is_OT,
                         'checkin_time' => null,
                         'checkout_time' => null,
+                        'status' =>-1,
                         'dayOfWeek' => $weekMap[$dayOfWeek]
                     ];
 
