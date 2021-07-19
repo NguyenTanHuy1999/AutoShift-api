@@ -125,7 +125,7 @@ class GeneralController extends Controller
             $late_time = null;
             for ($i = 0; $i < count($listHistory_statistical_1, COUNT_NORMAL); $i++) {
                 if (!empty($listHistory_statistical_1)) {
-                    if (($listHistory_statistical_1[$i]["late_check_in"]) > 400 && ($listHistory_statistical_1[$i]["soon_check_out"]) > 400) {
+                    if (($listHistory_statistical_1[$i]["late_check_in"]) >= 600 || ($listHistory_statistical_1[$i]["soon_check_out"]) >= 600) {
                         $late_time += 1;
                     } else {
                         $on_time += 1;
