@@ -83,7 +83,7 @@ class SalaryController extends Controller
         $shop_id = $user->shop_id;
         $list_user = [];
         //Danh sách User của shop
-        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
+        $listUser = User::where(['shop_id' => $shop_id, 'is_root' => 0])->get();
 
 
         if (!empty($listUser)) {
@@ -94,8 +94,8 @@ class SalaryController extends Controller
 
         //Các thông tin lấy từ client
         $limit_late_in = (int)$this->request->get('limit_late_in'); //phút
-        $limit_soon_out = (int)$this->request->get('limit_soon_out');//phút
-        $minute_sub = (int)$this->request->get('minute_sub');//phút
+        $limit_soon_out = (int)$this->request->get('limit_soon_out'); //phút
+        $minute_sub = (int)$this->request->get('minute_sub'); //phút
         $minute_sub_value = (int)$this->request->get('minute_sub_value'); //vnđ
         $data_month_clone = Carbon::parse($this->request->get('month_date')); //lấy tháng từ client
         $month_date = Carbon::parse($this->request->get('month_date'));
@@ -112,13 +112,13 @@ class SalaryController extends Controller
         for ($i = 0; $i < count($list_user, COUNT_NORMAL); $i++) {
             $user_id = ($list_user[$i]["id"]);
             //Tổng số ca theo kê hoạch của tháng chỉ tính ca "OT = 0"
-            $total_work_day_plan =null;
+            $total_work_day_plan = null;
             $listEmpShift_plan = Empshift::where('user_id', '=', mongo_id($user_id))->where('working_date', '>=', $from_date)
-            ->where('working_date', '<=', $to_date)->where('is_OT', '=', 0)->get();
+                ->where('working_date', '<=', $to_date)->where('is_OT', '=', 0)->get();
             foreach ($listEmpShift_plan as $emp_shift) {
                 $total_work_day_plan = $total_work_day_plan + $emp_shift->work_day;
             }
-           
+
             //Tổng số ca làm được tính luôn cả ca OT nếu có
             $total_work_time = 0;
             $total_work_day = 0;
@@ -126,8 +126,7 @@ class SalaryController extends Controller
             $total_soon_check_out = 0;
 
             $listEmpShift_real = Empshift::where('user_id', '=', mongo_id($user_id))->where('working_date', '>=', $from_date)
-            ->where('working_date', '<=', $to_date)->where('status', '=', 1)->where('late_check_in', '<=', $limit_late_in*60)->
-            where('soon_check_out', '<=', $limit_soon_out*60)->get();
+                ->where('working_date', '<=', $to_date)->where('status', '=', 1)->where('late_check_in', '<=', $limit_late_in * 60)->where('soon_check_out', '<=', $limit_soon_out * 60)->get();
             foreach ($listEmpShift_real as $emp_shift) {
                 $total_work_day = $total_work_day + $emp_shift->work_day;
                 $total_work_time = $total_work_time + $emp_shift->real_working_hours;
@@ -137,20 +136,20 @@ class SalaryController extends Controller
             //Tính lương theo điều kiện đưa ra
             $total_late_soon = $total_late_check_in + $total_soon_check_out;
             $basic_salary = $list_user[$i]["basic_salary"];
-            $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan)-(($total_late_soon/60/$minute_sub)*$minute_sub_value);
+            $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan) - (($total_late_soon / 60 / $minute_sub) * $minute_sub_value);
             $data = [
-                    'user_id' => mongo_id($user_id),
-                    'shop_id' => mongo_id($shop_id),
-                    'user_info' =>$list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day_plan' => $total_work_day_plan,
-                    'total_work_day_real' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
+                'user_id' => mongo_id($user_id),
+                'shop_id' => mongo_id($shop_id),
+                'user_info' => $list_user[$i],
+                'total_work_time' => $total_work_time,
+                'total_work_day_plan' => $total_work_day_plan,
+                'total_work_day_real' => $total_work_day,
+                'total_late_check_in' => $total_late_check_in,
+                'total_soon_check_out' => $total_soon_check_out,
+                'month' => $month,
+                'year' => $year,
+                'real_salary' => $real_salary
+            ];
             $emp_salary = $this->salaryRepository->create($data);
         }
         return $this->successRequest($emp_salary->transform());
@@ -159,22 +158,23 @@ class SalaryController extends Controller
     public function viewSalary() //xem luong theo thang
     {
         // chon thang va nam can xem
-        $month = (int)($this->request->get('month'));
-        $year = (int)($this->request->get('year'));
+
+        $month_date = Carbon::parse($this->request->get('month_date'));
+        $month = $month_date->month;
+        $year = $month_date->year;
         $user = $this->user();
         $shop_id = $user->shop_id;
         $list_user = [];
         //Danh sách User của shop
-        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
+        $listUser = User::where(['shop_id' => $shop_id, 'is_root' => 0])->get();
         foreach ($listUser as $users) {
             $user_id = $users->_id;
             $emp_salarys = Salary::where(['user_id' => mongo_id($user_id), 'month' => $month, 'year' => $year])->first();
-            if(empty($emp_salarys)){
+            if (empty($emp_salarys)) {
                 $emp_sal = [];
-            }else{
+            } else {
                 $emp_sal[] = $emp_salarys;
             }
-            
         }
         return $this->successRequest($emp_sal);
     }
@@ -185,7 +185,7 @@ class SalaryController extends Controller
         $date = Carbon::parse($this->request->get('date'));
         $working_date = $date->startOfDay();
         $listHistory = History::where('type', '=', 'check_out')->where('working_date', '=', $working_date)->get();
-        if (count($listHistory, COUNT_NORMAL)==0) {
+        if (count($listHistory, COUNT_NORMAL) == 0) {
             $data = [
                 'total_on_time' => null, //% dung gio
                 'total_late_time' => null, // %tre gio
