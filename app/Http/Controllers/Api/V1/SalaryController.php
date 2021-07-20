@@ -83,7 +83,7 @@ class SalaryController extends Controller
         $shop_id = $user->shop_id;
         $list_user = [];
         //Danh sách User của shop
-        $listUser = User::where(['shop_id' => $shop_id])->get();
+        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
 
 
         if (!empty($listUser)) {

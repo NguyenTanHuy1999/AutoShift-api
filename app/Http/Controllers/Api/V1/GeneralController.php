@@ -110,102 +110,62 @@ class GeneralController extends Controller
     {
         //Thống kê thứ 1: Theo % đúng giờ, trễ giờ, không chấm công và  tổng số nhân viên
         //Chọn ngày cần xem thống kê
+        $user = $this->user();
+        $shop_id = $user->shop_id;
         $date = Carbon::parse($this->request->get('date')); //Ngày client chọn
         $working_date = $date->startOfDay();
-        $listHistory_statistical_1 = History::where('type', '=', 'check_out')->where('working_date', '=', $working_date)->get();
-        if (count($listHistory_statistical_1, COUNT_NORMAL)==0) {
-            $data_statistical_time = [
-                'total_on_time' => null, //% dung gio
-                'total_late_time' => null, // %tre gio
-                'total_no_timekeeping' => null, //%khong cham cong
-                'total_emp' => null //tong so nhan vien
-            ];
-        } else {
-            $on_time = null;
-            $late_time = null;
-            for ($i = 0; $i < count($listHistory_statistical_1, COUNT_NORMAL); $i++) {
-                if (!empty($listHistory_statistical_1)) {
-                    if (($listHistory_statistical_1[$i]["late_check_in"]) >= 600 || ($listHistory_statistical_1[$i]["soon_check_out"]) >= 600) {
-                        $late_time += 1;
-                    } else {
-                        $on_time += 1;
+        $on_time = null;
+        $late_time = null;
+        $total_no_timekeeping = null;
+        $listUser = User::where(['shop_id' => $shop_id, 'is_root' => 0])->get();
+        $total_emp = count($listUser, COUNT_NORMAL);
+        foreach ($listUser as $users) {
+            $check_on_time =null;
+            $check_late_time = null;
+            $check_no = null;
+            $listCheckOut = History::where(['user_id' => mongo_id($users->_id),'type' => 'check_out', 'working_date' => $working_date])->get();
+            if (count($listCheckOut, COUNT_NORMAL)==0) {
+                $data_statistical_time = [];
+            }else{
+                foreach ($listCheckOut as $listChecks) {
+                    if($listChecks->late_check_in < 600 && $listChecks->soon_check_out < 600){
+                        $check_on_time += 1;
+                    }
+                    if((($listChecks->late_check_in >= 600) && ($listChecks->late_check_in < 720)) || 
+                    (($listChecks->soon_check_out >= 600) && ($listChecks->soon_check_out < 720))){
+                        $check_late_time += 1;
+                    }
+                    if($listChecks->late_check_in >= 720 || $listChecks->soon_check_out >= 720){
+                        $check_no += 1;
                     }
                 }
             }
-            $user = $this->user();
-            $shop_id = $user->shop_id;
-            //Danh sách User của shop
-            $listUser = User::where(['shop_id' => $shop_id])->get();
-            $total_emp = count($listUser, COUNT_NORMAL);
-            if ($late_time % 2 ==0 && $on_time % 2 ==0) {
-                $late_time = $late_time/2;
-                $on_time = $on_time/2;
-                $late_time = $late_time - rand(0, 3);
-                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
-                $data_statistical_time = [
-                    'total_on_time' => $on_time, //% dung gio
-                    'total_late_time' => $late_time, // %tre gio
-                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
-                    'total_emp' => $total_emp //tong so nhan vien
-                ];
-            } elseif ($late_time % 2 ==0 && $on_time % 2 !=0) {
-                $late_time = $late_time/2 -1;
-                $on_time = $on_time/2 + 0.5;
-                $late_time = $late_time - rand(0, 3);
-                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
-                $data_statistical_time = [
-                    'total_on_time' => $on_time, //% dung gio
-                    'total_late_time' => $late_time, // %tre gio
-                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
-                    'total_emp' => $total_emp //tong so nhan vien
-                ];
-            } elseif ($late_time % 2 !=0 && $on_time % 2 ==0) {
-                $late_time = $late_time/2 +0.5;
-                $on_time = $on_time/2 - 1;
-                $late_time = $late_time - rand(0, 3);
-                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
-                $data_statistical_time = [
-                    'total_on_time' => $on_time, //% dung gio
-                    'total_late_time' => $late_time, // %tre gio
-                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
-                    'total_emp' => $total_emp //tong so nhan vien
-                ];
-            } else {
-                $late_time = $late_time/2 +0.5;
-                $on_time = $on_time/2 - 0.5;
-                $late_time = $late_time - rand(0, 3);
-                $total_no_timekeeping = $total_emp - ($on_time + $late_time);
-                $data_statistical_time = [
-                    'total_on_time' => $on_time, //% dung gio
-                    'total_late_time' => $late_time, // %tre gio
-                    'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
-                    'total_emp' => $total_emp //tong so nhan vien
-                ];
+            if($check_on_time ==2){
+                $on_time += 1;
+            }
+            if($check_late_time ==2){
+                $late_time += 1;
+            }
+            if($check_no ==2){
+                $total_no_timekeeping += 1;
+            }
+            if($check_on_time ==1 && $check_late_time ==1){
+                $late_time += 1;
+            }
+            if($check_on_time ==1 && $check_no ==1){
+                $total_no_timekeeping += 1;
+            }
+            if($check_late_time ==1 && $check_no ==1){
+                $total_no_timekeeping += 1;
             }
         }
-        //Thống kê thứ 2: Tình trạng làm việc vẫn chọn 1 ngày nhất định để thống kê
-        $listCheckIn = History::where(['type' => 'check_in', 'working_date' => $working_date])->get();
-        $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
-        $check_in = count($listCheckIn, COUNT_NORMAL);
-        $check_out = count($listCheckOut, COUNT_NORMAL);
-        $late_check_in = null;
-        $soon_check_out = null;
-        for ($i = 0; $i < count($listCheckOut, COUNT_NORMAL); $i++) {
-            if (!empty($listCheckOut)) {
-                if (($listCheckOut[$i]["late_check_in"]) > 480) {
-                    $late_check_in += 1;
-                }
-                if (($listCheckOut[$i]["soon_check_out"]) > 480) {
-                    $soon_check_out += 1;
-                }
-            }
-        }
-        $data_statistical_who_is_working = [
-            'total_check_in' => $check_in, // so lan check in trong ngay
-            'total_check_out' => $check_out, // so lan check out trong ngay
-            'total_late_check_in' => $late_check_in, //so la di muon
-            'total_soon_check_out' => $soon_check_out, // so lan ve som
+        $data_statistical_time = [
+            'total_on_time' => $on_time, //% dung gio
+            'total_late_time' => $late_time, // %tre gio
+            'total_no_timekeeping' => $total_no_timekeeping, //%khong cham cong
+            'total_emp' => $total_emp //tong so nhan vien
         ];
+        
         //Thống kê thứ 3: Thống kê quỷ lương theo tháng
         $total_salary_month_1 = null;
         $total_salary_month_2 = null;
@@ -277,7 +237,6 @@ class GeneralController extends Controller
         //kết quả cuối cùng
         $data =[
             'data_statistical_time' => $data_statistical_time,
-            'data_statistical_who_is_working'=> $data_statistical_who_is_working,
             'data_statistical_salary_fund'=> $data_statistical_salary_fund
         ];
         return $this->successRequest($data);
@@ -291,7 +250,7 @@ class GeneralController extends Controller
         $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
         $list_late_soon = [];
         foreach ($listCheckOut as $listChecks) {
-            if (($listChecks->late_check_in)>600) {
+            if (($listChecks->late_check_in)>=600 && ($listChecks->late_check_in)<720) {
                 $data_late_check_in = [
                     'type' => 'late_check_in',
                     'user_id' => $listChecks->user_id,
@@ -304,7 +263,7 @@ class GeneralController extends Controller
                 ];
                 $list_late_soon[] = $data_late_check_in;
             }
-            if (($listChecks->soon_check_out)>600) {
+            if (($listChecks->soon_check_out)>=600 && ($listChecks->soon_check_out)<720) {
                 $data_soon_check_out = [
                     'type' => 'soon_check_out',
                     'user_id' => $listChecks->user_id,
@@ -363,7 +322,7 @@ class GeneralController extends Controller
        ];
         $user = $this->userRepository->create($admin_info);
         $users = $user->transform();
-        $userList[]=$users;
+        //$userList[]=$users;
        
         //Fake branch bỏ branch
         // $branchListName = [ 'Cần Đước' ,'Cần Giuộc','Bến Lức','Đước Hòa','Mộc Hóa','Thạnh Hóa','Tân Trụ','Thủ Thừa','TP.Tân An'];
