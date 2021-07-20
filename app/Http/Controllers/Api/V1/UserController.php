@@ -133,7 +133,7 @@ class UserController extends Controller
 
         $data = [];
 
-        $listUser = User::where(['shop_id' => $shop_id])->get();
+        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
         if (!empty($listUser)) {
             foreach ($listUser as $user) {
                 $data[] = $user->transform();

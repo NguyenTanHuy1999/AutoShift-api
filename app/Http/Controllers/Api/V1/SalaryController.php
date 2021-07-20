@@ -165,7 +165,7 @@ class SalaryController extends Controller
         $shop_id = $user->shop_id;
         $list_user = [];
         //Danh sách User của shop
-        $listUser = User::where(['shop_id' => $shop_id])->get();
+        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
         foreach ($listUser as $users) {
             $user_id = $users->_id;
             $emp_salarys = Salary::where(['user_id' => mongo_id($user_id), 'month' => $month, 'year' => $year])->first();
