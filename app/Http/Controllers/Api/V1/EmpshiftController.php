@@ -21,6 +21,7 @@ use Kreait\Firebase\ServiceAccount;
 use Firebase\Auth\Token\Exception\InvalidToken;
 
 use Illuminate\Support\Facades\Auth;
+use phpDocumentor\Reflection\Types\Array_;
 use Symfony\Component\Yaml\Tests\B;
 
 class EmpshiftController extends Controller
@@ -150,6 +151,62 @@ class EmpshiftController extends Controller
             $data[] = $shift->transform();
         }
         return $this->successRequest($data);
+    }
+
+    public function listShiftTimeSheet()
+    {
+        $shop_id = $this->user()->shop_id;
+        $from_date = Carbon::parse($this->request->get('from_date'));
+        $to_date = Carbon::parse($this->request->get('to_date'));
+        //Lấy danh sách user
+        $user_list = User::where((['shop_id' => $shop_id, 'is_root' => 0]))->get();
+        // dd($shop_id);
+        //Lấy danh sách ca
+        $listEmpShift = Empshift::where('working_date', '>=', $from_date)
+            ->where('working_date', '<=', $to_date)->get();
+
+
+
+
+
+
+        $data = [];
+        $weekMap = [
+            1 => 'MON',
+            2 => 'TUE',
+            3 => 'WED',
+            4 => 'THU',
+            5 => 'FRI',
+            6 => 'SAT',
+            7 => 'SUN',
+        ];
+        foreach ($user_list as $user) {
+            $rowData = [
+                'user' => $user->transform(),
+            ];
+            foreach ($weekMap as $value) {
+
+                // djson($listEmpShift);
+                $rowData[$value] = $this->getShiftByWeek($value, $listEmpShift, $user);
+            }
+
+            $data[] = $rowData;
+        }
+        return $this->successRequest($data);
+    }
+
+    public function getShiftByWeek($day_of_week, $listEmpShift, $user)
+    {
+        $data = [];
+        // djson($day_of_week);
+        foreach ($listEmpShift as $val) {
+            // dd($val->dayOfWeek == $day_of_week);
+            if ($val->dayOfWeek == $day_of_week &&  $val->user_id == $user->_id) {
+                $data[] = $val;
+            }
+        }
+
+        return $data;
     }
     #endregion
 }

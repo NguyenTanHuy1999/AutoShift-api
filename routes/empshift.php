@@ -36,11 +36,13 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
             'as' => 'empshift.list',
             'uses' => 'EmpshiftController@viewEF',
         ]);
-        $api->get('empshift/listbyuser',[
-            'as'=>'shift.listbyuser',
-            'uses'=> 'EmpshiftController@listShiftbyUser']);
+        $api->get('empshift/listbyuser', [
+            'as' => 'shift.listbyuser',
+            'uses' => 'EmpshiftController@listShiftbyUser'
+        ]);
+        $api->post('empshift/list-time-sheet', [
+            'as' => 'shift.listShiftTimeSheet',
+            'uses' => 'EmpshiftController@listShiftTimeSheet'
+        ]);
     });
-
-
-
 });
