@@ -32,6 +32,8 @@ class ShiftTransformer extends TransformerAbstract
             'timeBegin' => $model->time_begin,
             'timeEnd' => $model->time_end,
             'time' => $time,
+            'work_day' => $model->work_day,
+            'is_OT' => $model->is_OT,
             'assignments' => $model->assignments,
             'branch_ids' => $model->branch_ids,
             'dep_ids' => $model->dep_ids

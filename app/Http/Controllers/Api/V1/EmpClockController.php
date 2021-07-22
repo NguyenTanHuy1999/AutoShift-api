@@ -138,6 +138,17 @@ class EmpClockController extends Controller
                 return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
             }
         }
+
+        // Xử lý khi người dùng dùng thử chức năng chấm công
+        $emp_shifts = Empshift::whereBetween('working_date', [$from, $to])
+                ->where(['user_id' => mongo_id($user_id)])
+                ->get();
+    
+        $data = [];
+        foreach ($emp_shifts as $emp_shift) {
+            $data[] = $emp_shift->transform();
+        }
+        return $this->successRequest(['listShift' => $data, 'timekeepConfigClock' => $timekeep_client]);
     }
 
 

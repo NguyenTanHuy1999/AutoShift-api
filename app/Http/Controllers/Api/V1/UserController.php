@@ -91,8 +91,10 @@ class UserController extends Controller
             else{
                 $email = strtolower($this->request->get('email'));
                 $basic_salary = $this->request->get('basic_salary');
+                $alias = remove_sign($this->request->get('name'));
                 $userAttributes = [
                     'name' => $this->request->get('name'),
+                    'alias' => $alias,
                     'avatar' => null,
                     'email' => $email,
                     'position_id' => mongo_id($this->request->get('position_id')),
@@ -133,7 +135,37 @@ class UserController extends Controller
 
         $data = [];
 
-        $listUser = User::where(['shop_id' => $shop_id,'is_root' => 0])->get();
+
+        $name = $this->request->get('name');
+        //dd( $name);
+        $listUserQuery= User::where('shop_id', '=',$shop_id)->where('is_root','=',0);
+        if (!empty($name)) {
+            $listUserQuery->where('alias', 'LIKE', '%'.$name.'%');
+        }
+        $listUser= $listUserQuery->get();
+        // $listUser = User::where('shop_id', '=',$shop_id)->where('is_root','=',0)->where('alias', 'like', "%{$name}%")->get();
+        if (!empty($listUser)) {
+            foreach ($listUser as $user) {
+                $data[] = $user->transform();
+            }
+        }
+        return $this->successRequest($data);
+    }
+
+    public function search(){
+         // Validate Data import.
+         $validator = \Validator::make($this->request->all(), [
+            'name' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->errorBadRequest($validator->messages()->toArray());
+        }
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+        $name = $this->request->get('name');
+        $data = [];
+        $listUser = User::where('shop_id', '=',$shop_id)->where('is_root','=',0)->where('alias', 'like', "%{$name}%")->get();
+        djson($listUser);
         if (!empty($listUser)) {
             foreach ($listUser as $user) {
                 $data[] = $user->transform();
@@ -214,8 +246,10 @@ class UserController extends Controller
             else{
                 $email = strtolower($this->request->get('email'));
                 $basic_salary = $this->request->get('basic_salary');
+                $alias = remove_sign($this->request->get('name'));
                 $userAttributes = [
                     'name' => $this->request->get('name'),
+                    'alias' => $alias,
                     'avatar' => null,
                     'email' => $email,
                     'position_id' => mongo_id($this->request->get('position_id')),

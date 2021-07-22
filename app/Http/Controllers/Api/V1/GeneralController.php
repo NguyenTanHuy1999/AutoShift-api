@@ -431,6 +431,7 @@ class GeneralController extends Controller
             $basic_salary = rand(5000000, 15000000);
             $userAttributes = [
                 'name' => $userListName[$i],
+                'alias' => remove_sign($userListName[$i]),
                 'avatar' => 'http://192.168.1.3:8081/uploads/TanHuy.jpg',
                 'email' => 'admin@gmail.com',
                 'position_id' => $positionList_id,

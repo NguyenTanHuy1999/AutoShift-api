@@ -104,6 +104,11 @@ $api->version('v1', ['namespace' => 'App\Http\Controllers\Api\V1'], function ($a
                 'as' => 'user.list',
                 'uses' => 'UserController@list',
             ]);
+            //Search User
+            $api->post('user/search', [
+                'as' => 'user.search',
+                'uses' => 'UserController@search',
+            ]);
 
             //Get Info User
             $api->get('user/company-field', [

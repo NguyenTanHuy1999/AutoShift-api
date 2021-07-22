@@ -95,6 +95,7 @@ class ShopController extends Controller
         ];
         $shop = $this->shopRepository->create($attributes);
 
+        $alias = remove_sign($this->request->get('name'));
         // Sau đó tạo user
         $userAttributes = [
             'email' => $email,
@@ -108,6 +109,7 @@ class ShopController extends Controller
             'is_admin' =>1,
             'sex' => null,
             'name' => 'Root',
+            'alias' => $alias,
             'phone_number' => $this->request->get('phone_number')
         ];
         $user = $this->userRepository->create($userAttributes);
