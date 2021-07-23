@@ -515,6 +515,7 @@ class GeneralController extends Controller
                             'is_OT' => 0,
                             'checkin_time' => null,
                             'checkout_time' => null,
+                            'type' =>null,
                             'status' => -1,
                             'dayOfWeek' => $weekMap[$dayOfWeek]
                         ];
@@ -634,12 +635,28 @@ class GeneralController extends Controller
                     }
                     $real_working_hours = 14400 - ($late_check_in +  $soon_check_out);
 
+                    //check đk
+                    $type = null;
+                    if ($late_check_in < 600 && $soon_check_out < 600) {
+                        $type = 'in-time';
+                    }
+                    if ((($late_check_in >= 600) && ($late_check_in < 720)) ||
+                        (($soon_check_out >= 600) && ($soon_check_out < 720))
+                    ) {
+                        $type = 'late-soon';
+                    }
+                    if ($late_check_in >= 720 || $soon_check_out >= 720) {
+                        $type = 'no-check-in';
+                    }
+                 
+
                     //update emp_shift cuối cùng
 
                     $attribute4 = [
                         'real_working_hours' => $real_working_hours,
                         'late_check_in' => $late_check_in,
-                        'soon_check_out' => $soon_check_out
+                        'soon_check_out' => $soon_check_out,
+                        'type' => $type
                     ];
                     $empShift_3 = $this->empshiftRepository->update($attribute4, $listEmpShift->_id);
 
@@ -750,13 +767,27 @@ class GeneralController extends Controller
                         $late_check_in = 0;
                     }
                     $real_working_hours = 14400 - ($late_check_in +  $soon_check_out);
-
+                    //check đk
+                    $type = null;
+                    if ($late_check_in < 600 && $soon_check_out < 600) {
+                        $type = 'in-time';
+                    }
+                    if ((($late_check_in >= 600) && ($late_check_in < 720)) ||
+                         (($soon_check_out >= 600) && ($soon_check_out < 720))
+                     ) {
+                        $type = 'late-soon';
+                    }
+                    if ($late_check_in >= 720 || $soon_check_out >= 720) {
+                        $type = 'no-check-in';
+                    }
+                  
                     //update emp_shift cuối cùng
 
                     $attribute4 = [
                         'real_working_hours' => $real_working_hours,
                         'late_check_in' => $late_check_in,
-                        'soon_check_out' => $soon_check_out
+                        'soon_check_out' => $soon_check_out,
+                        'type' => $type
                     ];
                     $empShift_3 = $this->empshiftRepository->update($attribute4, $listEmpShift->_id);
 
