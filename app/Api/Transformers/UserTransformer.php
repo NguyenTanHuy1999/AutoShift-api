@@ -44,6 +44,7 @@ class UserTransformer extends TransformerAbstract
         $data = array(
             'id' => $model->_id,
             'name' => $model->name,
+            'alias' => $model->alias,
             'avatar' => $model->avatar,
             'full_name' => $model->full_name,
             'phone_number' => $model->phone_number,
