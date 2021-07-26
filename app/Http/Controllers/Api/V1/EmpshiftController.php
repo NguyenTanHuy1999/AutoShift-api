@@ -158,8 +158,13 @@ class EmpshiftController extends Controller
         $shop_id = $this->user()->shop_id;
         $from_date = Carbon::parse($this->request->get('from_date'));
         $to_date = Carbon::parse($this->request->get('to_date'));
+        $name = $this->request->get('name');
         //Lấy danh sách user
-        $user_list = User::where((['shop_id' => $shop_id, 'is_root' => 0]))->get();
+        $listUserQuery= User::where('shop_id', '=',$shop_id)->where('is_root','=',0);
+        if (!empty($name)) {
+            $listUserQuery->where('alias', 'LIKE', '%'.$name.'%');
+        }
+        $listUser= $listUserQuery->get();
         // dd($shop_id);
         //Lấy danh sách ca
         $listEmpShift = Empshift::where('working_date', '>=', $from_date)
@@ -180,7 +185,7 @@ class EmpshiftController extends Controller
             6 => 'SAT',
             7 => 'SUN',
         ];
-        foreach ($user_list as $user) {
+        foreach ($listUser as $user) {
             $rowData = [
                 'user' => $user->transform(),
             ];
