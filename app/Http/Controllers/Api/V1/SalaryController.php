@@ -136,21 +136,39 @@ class SalaryController extends Controller
             //Tính lương theo điều kiện đưa ra
             $total_late_soon = $total_late_check_in + $total_soon_check_out;
             $basic_salary = $list_user[$i]["basic_salary"];
-            $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan) - (($total_late_soon / 60 / $minute_sub) * $minute_sub_value);
-            $data = [
-                'user_id' => mongo_id($user_id),
-                'shop_id' => mongo_id($shop_id),
-                'user_info' => $list_user[$i],
-                'total_work_time' => $total_work_time,
-                'total_work_day_plan' => $total_work_day_plan,
-                'total_work_day_real' => $total_work_day,
-                'total_late_check_in' => $total_late_check_in,
-                'total_soon_check_out' => $total_soon_check_out,
-                'month' => $month,
-                'year' => $year,
-                'real_salary' => $real_salary
-            ];
-            $emp_salary = $this->salaryRepository->create($data);
+            if($total_work_day_plan ==0){
+                $real_salary = 0;
+                $data = [
+                    'user_id' => mongo_id($user_id),
+                    'shop_id' => mongo_id($shop_id),
+                    'user_info' => $list_user[$i],
+                    'total_work_time' => $total_work_time,
+                    'total_work_day_plan' => $total_work_day_plan,
+                    'total_work_day_real' => $total_work_day,
+                    'total_late_check_in' => $total_late_check_in,
+                    'total_soon_check_out' => $total_soon_check_out,
+                    'month' => $month,
+                    'year' => $year,
+                    'real_salary' => $real_salary
+                ];
+                $emp_salary = $this->salaryRepository->create($data);
+            }else{
+                $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan) - (($total_late_soon / 60 / $minute_sub) * $minute_sub_value);
+                $data = [
+                    'user_id' => mongo_id($user_id),
+                    'shop_id' => mongo_id($shop_id),
+                    'user_info' => $list_user[$i],
+                    'total_work_time' => $total_work_time,
+                    'total_work_day_plan' => $total_work_day_plan,
+                    'total_work_day_real' => $total_work_day,
+                    'total_late_check_in' => $total_late_check_in,
+                    'total_soon_check_out' => $total_soon_check_out,
+                    'month' => $month,
+                    'year' => $year,
+                    'real_salary' => $real_salary
+                ];
+                $emp_salary = $this->salaryRepository->create($data);
+            }
         }
         return $this->successRequest($emp_salary->transform());
     }
