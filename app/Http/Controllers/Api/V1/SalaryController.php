@@ -125,8 +125,17 @@ class SalaryController extends Controller
             $total_late_check_in = 0;
             $total_soon_check_out = 0;
 
-            $listEmpShift_real = Empshift::where('user_id', '=', mongo_id($user_id))->where('working_date', '>=', $from_date)
-                ->where('working_date', '<=', $to_date)->where('status', '=', 1)->where('late_check_in', '<=', $limit_late_in * 60)->where('soon_check_out', '<=', $limit_soon_out * 60)->get();
+            $listEmpShift_real_query = Empshift::where('user_id', '=', mongo_id($user_id))
+                ->where('working_date', '>=', $from_date)
+                ->where('working_date', '<=', $to_date)->where('status', '=', 1);
+
+            if ($limit_late_in != 0) {
+                $listEmpShift_real_query->where('late_check_in', '<=', $limit_late_in * 60);
+            };
+            if ($limit_late_in != 0) {
+                $listEmpShift_real_query->where('soon_check_out', '<=', $limit_soon_out * 60);
+            };
+            $listEmpShift_real = $listEmpShift_real_query->get();
             foreach ($listEmpShift_real as $emp_shift) {
                 $total_work_day = $total_work_day + $emp_shift->work_day;
                 $total_work_time = $total_work_time + $emp_shift->real_working_hours;
@@ -136,8 +145,14 @@ class SalaryController extends Controller
             //Tính lương theo điều kiện đưa ra
             $total_late_soon = $total_late_check_in + $total_soon_check_out;
             $basic_salary = $list_user[$i]["basic_salary"];
-            if($total_work_day_plan ==0){
-                $real_salary = 0;
+            if ($total_work_day != 0) {
+                $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan);
+                if ($minute_sub != 0) {
+                    $real_salary -= (($total_late_soon / 60 / $minute_sub) * $minute_sub_value);
+                }
+                if ($real_salary < 0) {
+                    $real_salary = 0;
+                }
                 $data = [
                     'user_id' => mongo_id($user_id),
                     'shop_id' => mongo_id($shop_id),
@@ -151,26 +166,10 @@ class SalaryController extends Controller
                     'year' => $year,
                     'real_salary' => $real_salary
                 ];
-                $emp_salary = $this->salaryRepository->create($data);
-            }else{
-                $real_salary = $basic_salary * ($total_work_day / $total_work_day_plan) - (($total_late_soon / 60 / $minute_sub) * $minute_sub_value);
-                $data = [
-                    'user_id' => mongo_id($user_id),
-                    'shop_id' => mongo_id($shop_id),
-                    'user_info' => $list_user[$i],
-                    'total_work_time' => $total_work_time,
-                    'total_work_day_plan' => $total_work_day_plan,
-                    'total_work_day_real' => $total_work_day,
-                    'total_late_check_in' => $total_late_check_in,
-                    'total_soon_check_out' => $total_soon_check_out,
-                    'month' => $month,
-                    'year' => $year,
-                    'real_salary' => $real_salary
-                ];
-                $emp_salary = $this->salaryRepository->create($data);
+                $this->salaryRepository->create($data);
             }
         }
-        return $this->successRequest($emp_salary->transform());
+        return $this->successRequest('Tạo thành công');
     }
     //View Salary
     public function viewSalary() //xem luong theo thang
@@ -185,15 +184,15 @@ class SalaryController extends Controller
         $name = $this->request->get('name');
         $emp_sal = [];
         //Danh sách User của shop
-        $listUserQuery= User::where('shop_id', '=',$shop_id)->where('is_root','=',0);
+        $listUserQuery = User::where('shop_id', '=', $shop_id)->where('is_root', '=', 0);
         if (!empty($name)) {
-            $listUserQuery->where('alias', 'LIKE', '%'.$name.'%');
+            $listUserQuery->where('alias', 'LIKE', '%' . $name . '%');
         }
-        $listUser= $listUserQuery->get();
+        $listUser = $listUserQuery->get();
         if (!empty($listUser)) {
             foreach ($listUser as $users) {
                 $user_id = $users->_id;
-    
+
                 $emp_salarys = Salary::where(['user_id' => mongo_id($user_id), 'month' => $month, 'year' => $year])->first();
                 if (!empty($emp_salarys)) {
                     $emp_sal[] = $emp_salarys;
