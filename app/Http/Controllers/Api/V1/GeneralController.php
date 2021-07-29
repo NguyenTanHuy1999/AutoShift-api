@@ -279,8 +279,8 @@ class GeneralController extends Controller
             }
         }
         usort($list_late_soon, fn ($a, $b) => $a['value'] > $b['value']);
-        $top5emp = array_slice(array_reverse($list_late_soon), 0, 5);
-        return $this->successRequest($top5emp);
+        // $top5emp = array_slice(array_reverse($list_late_soon), 0, 5);
+        return $this->successRequest(array_reverse($list_late_soon));
     }
 
     public function fakedata()
@@ -515,7 +515,7 @@ class GeneralController extends Controller
                             'is_OT' => 0,
                             'checkin_time' => null,
                             'checkout_time' => null,
-                            'type' =>null,
+                            'type' => null,
                             'status' => -1,
                             'dayOfWeek' => $weekMap[$dayOfWeek]
                         ];
@@ -648,7 +648,7 @@ class GeneralController extends Controller
                     if ($late_check_in >= 720 || $soon_check_out >= 720) {
                         $type = 'no-check-in';
                     }
-                 
+
 
                     //update emp_shift cuối cùng
 
@@ -773,14 +773,14 @@ class GeneralController extends Controller
                         $type = 'in-time';
                     }
                     if ((($late_check_in >= 600) && ($late_check_in < 720)) ||
-                         (($soon_check_out >= 600) && ($soon_check_out < 720))
-                     ) {
+                        (($soon_check_out >= 600) && ($soon_check_out < 720))
+                    ) {
                         $type = 'late-soon';
                     }
                     if ($late_check_in >= 720 || $soon_check_out >= 720) {
                         $type = 'no-check-in';
                     }
-                  
+
                     //update emp_shift cuối cùng
 
                     $attribute4 = [
