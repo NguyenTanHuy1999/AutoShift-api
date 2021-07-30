@@ -248,7 +248,9 @@ class GeneralController extends Controller
         //Chọn ngày cần xem thống kê
         $date = Carbon::parse($this->request->get('date')); //Ngày client chọn
         $working_date = $date->startOfDay();
-        $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date])->get();
+        $user = $this->user();
+        $shop_id = $user->shop_id;
+        $listCheckOut = History::where(['type' => 'check_out', 'working_date' => $working_date,'shop_id' => mongo_id($shop_id),])->get();
         $list_late_soon = [];
         foreach ($listCheckOut as $listChecks) {
             if (($listChecks->late_check_in) >= 600 && ($listChecks->late_check_in) < 720) {
@@ -314,7 +316,7 @@ class GeneralController extends Controller
             'dep_id' => null,
             'is_root' => 1,
             'is_admin' => 1,
-            'phone_number' => '0358805114',
+            'phone_number' => '011223344',
             //'timekeep_config' =>$timekeepConfigList,
             'basic_salary' => 20000000,
             'shop_id' => mongo_id($shop_id),
@@ -570,6 +572,7 @@ class GeneralController extends Controller
                     //History check in
                     $data = [
                         'user_id' => mongo_id($user_id),
+                        'shop_id' => mongo_id($shop_id),
                         'user_name' => $user_name,
                         'working_date' => $working_date,
                         'emp_shift_id' => mongo_id($emp_shift_id),
@@ -663,6 +666,7 @@ class GeneralController extends Controller
                     //History check out
                     $data1 = [
                         'user_id' => mongo_id($user_id),
+                        'shop_id' => mongo_id($shop_id),
                         'user_name' => $user_name,
                         'working_date' => $working_date,
                         'emp_shift_id' => mongo_id($emp_shift_id),
@@ -705,6 +709,7 @@ class GeneralController extends Controller
                     //History check in
                     $data = [
                         'user_id' => mongo_id($user_id),
+                        'shop_id' => mongo_id($shop_id),
                         'user_name' => $user_name,
                         'working_date' => $working_date,
                         'emp_shift_id' => mongo_id($emp_shift_id),
@@ -794,6 +799,7 @@ class GeneralController extends Controller
                     //History check out
                     $data1 = [
                         'user_id' => mongo_id($user_id),
+                        'shop_id' => mongo_id($shop_id),
                         'user_name' => $user_name,
                         'working_date' => $working_date,
                         'emp_shift_id' => mongo_id($emp_shift_id),
